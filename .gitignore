@@ -1,0 +1,40 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+build/
+dist/
+*.egg-info/
+venv/
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+*.cover
+coverage.xml
+*.log
+test-results/unit.xml
+unit-coverage.xml
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+debug.log
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
