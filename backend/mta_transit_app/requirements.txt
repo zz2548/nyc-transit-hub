@@ -2,3 +2,8 @@ flask
 requests
 protobuf
 gtfs-realtime-bindings
+flask_migrate
+flask_jwt_extended
+flask_babel
+redis
+psycopg2

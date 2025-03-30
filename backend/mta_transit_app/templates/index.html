@@ -1,535 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>NYC Subway Real-time Information</title>
+    <title>NYC Transit App</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 1200px;
-            margin: 0 auto;
+            margin: 0;
             padding: 20px;
-            background-color: #f5f5f5;
+            line-height: 1.6;
         }
         h1 {
-            color: #0047AB;
-            text-align: center;
-            margin-bottom: 30px;
+            color: #0066cc;
         }
-        .controls {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            align-items: center;
-            flex-wrap: wrap;
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
         }
-        button {
-            background-color: #0047AB;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.2s;
-        }
-        button:hover {
-            background-color: #003380;
-        }
-        .card-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 10px;
-        }
-        .train-card {
-            background-color: white;
+        .card {
+            background: #f8f9fa;
             border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .api-link {
+            background: #e9ecef;
             padding: 10px;
-            transition: transform 0.2s;
-            font-size: 13px;
-        }
-        .train-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
-        }
-        .route-badge {
+            border-radius: 4px;
+            font-family: monospace;
             display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            color: white;
-            font-weight: bold;
-            margin-bottom: 6px;
-            font-size: 14px;
-        }
-        .info-row {
-            margin-bottom: 4px;
-            display: flex;
-        }
-        .info-label {
-            font-weight: bold;
-            width: 55px;
-            color: #555;
-            font-size: 12px;
-        }
-        .info-value {
-            flex: 1;
-            font-size: 12px;
-        }
-        .stops-list {
-            margin-top: 8px;
-            border-top: 1px solid #eee;
-            padding-top: 6px;
-        }
-        .stop-item {
-            padding: 3px 0;
-            font-size: 12px;
-        }
-        .stop-id {
-            font-weight: bold;
-            margin-right: 5px;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px;
-            font-style: italic;
-            color: #777;
-            font-size: 18px;
-        }
-        .error {
-            background-color: #fff0f0;
-            color: #e53935;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 5px solid #e53935;
-        }
-        .pagination {
-            display: flex;
-            justify-content: center;
-            margin-top: 30px;
-            gap: 10px;
-        }
-        .page-info {
-            line-height: 40px;
-            color: #555;
-        }
-        .line-1 { background-color: #ff3333; }
-        .line-2 { background-color: #ff3333; }
-        .line-3 { background-color: #ff3333; }
-        .line-4 { background-color: #00a64d; }
-        .line-5 { background-color: #00a64d; }
-        .line-6 { background-color: #00a64d; }
-        .line-7 { background-color: #a80f63; }
-        .line-A { background-color: #0039a6; }
-        .line-C { background-color: #0039a6; }
-        .line-E { background-color: #0039a6; }
-        .line-B { background-color: #ff6319; }
-        .line-D { background-color: #ff6319; }
-        .line-F { background-color: #ff6319; }
-        .line-M { background-color: #ff6319; }
-        .line-N { background-color: #fccc0a; color: black; }
-        .line-Q { background-color: #fccc0a; color: black; }
-        .line-R { background-color: #fccc0a; color: black; }
-        .line-W { background-color: #fccc0a; color: black; }
-        .line-G { background-color: #6cbe45; }
-        .line-J { background-color: #996633; }
-        .line-Z { background-color: #996633; }
-        .line-L { background-color: #a7a9ac; }
-        .line-S { background-color: #808183; }
-        .line-SIR { background-color: #0039a6; }
-        .filter-section {
-            margin: 20px 0;
-            padding: 15px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        .filter-title {
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .feed-options {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .feed-option {
-            display: flex;
-            align-items: center;
-            background-color: #f5f5f5;
-            padding: 6px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .feed-option:hover {
-            background-color: #e0e0e0;
-        }
-        .feed-option.active {
-            background-color: #0047AB;
-            color: white;
-        }
-        .feed-option input {
-            margin-right: 5px;
-        }
-        .options-row {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-        .current-stop {
-            font-weight: bold;
-            color: #0047AB;
-        }
-        .next-stop {
-            color: #333;
+            margin: 5px 0;
         }
     </style>
 </head>
 <body>
-    <h1>🚇 NYC Subway Real-time Information</h1>
+    <div class="container">
+        <h1>NYC Transit Information</h1>
 
-    <div class="controls">
-        <button onclick="loadData()">Refresh Data</button>
-        <div>
-            <select id="itemsPerPage" onchange="changeItemsPerPage()">
-                <option value="12">12 per page</option>
-                <option value="24" selected>24 per page</option>
-                <option value="36">36 per page</option>
-                <option value="48">48 per page</option>
-            </select>
-        </div>
-    </div>
+        <div class="card">
+            <h2>API Endpoints</h2>
+            <p>Access real-time transit data through the following API endpoints:</p>
 
-    <div class="filter-section">
-        <div class="filter-title">Filter by Subway Lines:</div>
-        <div class="feed-options">
-            <label class="feed-option active">
-                <input type="checkbox" name="feed" value="all" checked onchange="toggleAllFeeds(this)"> All Lines
-            </label>
-            <label class="feed-option">
-                <input type="checkbox" name="feed" value="1-2-3-4-5-6-7-S" checked onchange="toggleFeed(this)"> 1-2-3-4-5-6-7-S
-            </label>
-            <label class="feed-option">
-                <input type="checkbox" name="feed" value="A-C-E-Srockaway" checked onchange="toggleFeed(this)"> A-C-E
-            </label>
-            <label class="feed-option">
-                <input type="checkbox" name="feed" value="B-D-F-M-Sfranklin" checked onchange="toggleFeed(this)"> B-D-F-M
-            </label>
-            <label class="feed-option">
-                <input type="checkbox" name="feed" value="N-Q-R-W" checked onchange="toggleFeed(this)"> N-Q-R-W
-            </label>
-            <label class="feed-option">
-                <input type="checkbox" name="feed" value="G" checked onchange="toggleFeed(this)"> G
-            </label>
-            <label class="feed-option">
-                <input type="checkbox" name="feed" value="L" checked onchange="toggleFeed(this)"> L
-            </label>
-            <label class="feed-option">
-                <input type="checkbox" name="feed" value="J-Z" checked onchange="toggleFeed(this)"> J-Z
-            </label>
-            <label class="feed-option">
-                <input type="checkbox" name="feed" value="SIR" checked onchange="toggleFeed(this)"> Staten Island
-            </label>
-        </div>
-        <div class="options-row">
             <div>
-                <label for="dataType">Show:</label>
-                <select id="dataType" onchange="filterDataType()">
-                    <option value="all" selected>All Updates</option>
-                    <option value="trip_update">Trip Updates</option>
-                    <option value="vehicle">Vehicle Positions</option>
-                </select>
+                <strong>Vehicle Positions:</strong>
+                <div class="api-link">/vehicles</div>
+                <p>Returns real-time positions and trip updates for subway trains.</p>
             </div>
-            <button onclick="applyFilters()">Apply Filters</button>
+        </div>
+
+        <div class="card">
+            <h2>About This Application</h2>
+            <p>This application provides real-time information about the New York City transit system,
+               including subway train positions, schedules, and service alerts.</p>
+            <p>Data is sourced directly from the MTA GTFS-realtime feeds.</p>
         </div>
     </div>
-
-    <div id="error-container"></div>
-    <div id="list" class="loading">Loading subway data...</div>
-
-    <div class="pagination">
-        <button id="prevBtn" onclick="changePage(-1)">Previous</button>
-        <div id="pageInfo" class="page-info">Page 1 of 1</div>
-        <button id="nextBtn" onclick="changePage(1)">Next</button>
-    </div>
-
-    <script>
-        // State variables
-        let allData = [];
-        let filteredData = [];
-        let currentPage = 1;
-        let itemsPerPage = 24;
-        let selectedFeeds = ['1-2-3-4-5-6-7-S', 'A-C-E-Srockaway', 'B-D-F-M-Sfranklin', 'N-Q-R-W', 'G', 'L', 'J-Z', 'SIR'];
-        let selectedDataType = 'all';
-
-        // Map of line IDs to their feed groups
-        const lineFeedMap = {
-            '1': '1-2-3-4-5-6-7-S', '2': '1-2-3-4-5-6-7-S', '3': '1-2-3-4-5-6-7-S',
-            '4': '1-2-3-4-5-6-7-S', '5': '1-2-3-4-5-6-7-S', '6': '1-2-3-4-5-6-7-S',
-            '7': '1-2-3-4-5-6-7-S', 'S': '1-2-3-4-5-6-7-S',
-            'A': 'A-C-E-Srockaway', 'C': 'A-C-E-Srockaway', 'E': 'A-C-E-Srockaway',
-            'B': 'B-D-F-M-Sfranklin', 'D': 'B-D-F-M-Sfranklin', 'F': 'B-D-F-M-Sfranklin', 'M': 'B-D-F-M-Sfranklin',
-            'N': 'N-Q-R-W', 'Q': 'N-Q-R-W', 'R': 'N-Q-R-W', 'W': 'N-Q-R-W',
-            'G': 'G',
-            'L': 'L',
-            'J': 'J-Z', 'Z': 'J-Z',
-            'SIR': 'SIR'
-        };
-
-        // Format a UNIX timestamp to readable time
-        function formatTime(timestamp) {
-            if (!timestamp) return "N/A";
-            const date = new Date(timestamp * 1000);
-            return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        }
-
-        // Toggle all feeds
-        function toggleAllFeeds(checkbox) {
-            const feedCheckboxes = document.querySelectorAll('input[name="feed"]');
-            const allChecked = checkbox.checked;
-
-            feedCheckboxes.forEach(cb => {
-                if (cb.value !== 'all') {
-                    cb.checked = allChecked;
-                    cb.parentElement.classList.toggle('active', allChecked);
-                }
-            });
-
-            if (allChecked) {
-                selectedFeeds = ['1-2-3-4-5-6-7-S', 'A-C-E-Srockaway', 'B-D-F-M-Sfranklin', 'N-Q-R-W', 'G', 'L', 'J-Z', 'SIR'];
-            } else {
-                selectedFeeds = [];
-            }
-        }
-
-        // Toggle individual feed
-        function toggleFeed(checkbox) {
-            const feed = checkbox.value;
-            const allCheckbox = document.querySelector('input[value="all"]');
-
-            // Update the active class
-            checkbox.parentElement.classList.toggle('active', checkbox.checked);
-
-            if (checkbox.checked) {
-                // Add to selected feeds if not already there
-                if (!selectedFeeds.includes(feed)) {
-                    selectedFeeds.push(feed);
-                }
-            } else {
-                // Remove from selected feeds
-                selectedFeeds = selectedFeeds.filter(f => f !== feed);
-
-                // Uncheck "All" checkbox if any individual feed is unchecked
-                allCheckbox.checked = false;
-                allCheckbox.parentElement.classList.remove('active');
-            }
-
-            // Check if all individual feeds are checked and update "All" checkbox
-            const feedCheckboxes = document.querySelectorAll('input[name="feed"]:not([value="all"])');
-            const allIndividualChecked = Array.from(feedCheckboxes).every(cb => cb.checked);
-
-            if (allIndividualChecked) {
-                allCheckbox.checked = true;
-                allCheckbox.parentElement.classList.add('active');
-            }
-        }
-
-        // Filter data by type
-        function filterDataType() {
-            selectedDataType = document.getElementById('dataType').value;
-        }
-
-        // Apply all filters
-        function applyFilters() {
-            filterData();
-            currentPage = 1;
-            displayData();
-        }
-
-        // Filter the data based on selected feeds and data type
-        function filterData() {
-            filteredData = allData.filter(item => {
-                // Skip info items
-                if (item.type === 'info') return false;
-
-                // Filter by data type
-                if (selectedDataType !== 'all' && item.type !== selectedDataType) {
-                    return false;
-                }
-
-                // Filter by selected feeds
-                const routeId = item.route_id || '?';
-                const feedForRoute = lineFeedMap[routeId] || '';
-
-                return selectedFeeds.includes(feedForRoute);
-            });
-        }
-
-        // Change items per page
-        function changeItemsPerPage() {
-            itemsPerPage = parseInt(document.getElementById('itemsPerPage').value);
-            currentPage = 1; // Reset to first page
-            displayData();
-        }
-
-        // Change page
-        function changePage(delta) {
-            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-            const newPage = currentPage + delta;
-
-            if (newPage >= 1 && newPage <= totalPages) {
-                currentPage = newPage;
-                displayData();
-                // Scroll to top
-                window.scrollTo(0, 0);
-            }
-        }
-
-        // Display the paginated data
-        function displayData() {
-            const listContainer = document.getElementById('list');
-            listContainer.innerHTML = '';
-
-            if (!filteredData || filteredData.length === 0) {
-                listContainer.innerHTML = '<div class="loading">No subway data available for selected filters</div>';
-                updatePagination(0);
-                return;
-            }
-
-            // Calculate pagination
-            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-            const startIdx = (currentPage - 1) * itemsPerPage;
-            const endIdx = Math.min(startIdx + itemsPerPage, filteredData.length);
-            const currentItems = filteredData.slice(startIdx, endIdx);
-
-            // Create container
-            const cardContainer = document.createElement('div');
-            cardContainer.className = 'card-container';
-
-            // Process each item
-            currentItems.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'train-card';
-
-                // Common data for any item type
-                let routeId = item.route_id || item.routeId || "?";
-
-                // Basic card structure
-                let cardHTML = '';
-
-                // Route badge with appropriate color
-                cardHTML += `<div class="route-badge line-${routeId}">${routeId}</div>`;
-
-                // Display different info based on what's available
-                if (item.type === 'trip_update' || item.tripUpdate) {
-                    // Get only first two stops (current and next)
-                    const stops = item.stops || (item.stopTimeUpdate ? item.stopTimeUpdate.slice(0, 2) : []);
-
-                    if (stops && stops.length > 0) {
-                        // Current stop
-                        const currentStop = stops[0];
-                        const currentStopId = currentStop.stop_id || currentStop.stopId || "?";
-                        let currentTime = "N/A";
-
-                        if (currentStop.arrival_time) {
-                            currentTime = currentStop.arrival_time;
-                        } else if (currentStop.arrival && currentStop.arrival.time) {
-                            currentTime = formatTime(currentStop.arrival.time);
-                        }
-
-                        cardHTML += `
-                            <div class="current-stop">
-                                ${currentStopId}: ${currentTime}
-                            </div>
-                        `;
-
-                        // Next stop (if available)
-                        if (stops.length > 1) {
-                            const nextStop = stops[1];
-                            const nextStopId = nextStop.stop_id || nextStop.stopId || "?";
-                            let nextTime = "N/A";
-
-                            if (nextStop.arrival_time) {
-                                nextTime = nextStop.arrival_time;
-                            } else if (nextStop.arrival && nextStop.arrival.time) {
-                                nextTime = formatTime(nextStop.arrival.time);
-                            }
-
-                            cardHTML += `
-                                <div class="next-stop">
-                                    ${nextStopId}: ${nextTime}
-                                </div>
-                            `;
-                        }
-                    } else {
-                        cardHTML += `<div>No stop information</div>`;
-                    }
-                } else if (item.latitude || (item.position && item.position.latitude)) {
-                    // For vehicle positions, just show a simple message
-                    cardHTML += `<div>Live position available</div>`;
-                }
-
-                card.innerHTML = cardHTML;
-                cardContainer.appendChild(card);
-            });
-
-            listContainer.appendChild(cardContainer);
-            updatePagination(filteredData.length);
-        }
-
-        // Update pagination controls
-        function updatePagination(totalItems) {
-            const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-            document.getElementById('prevBtn').disabled = (currentPage <= 1);
-            document.getElementById('nextBtn').disabled = (currentPage >= totalPages);
-            document.getElementById('pageInfo').textContent =
-                `Page ${currentPage} of ${totalPages} (${totalItems} trains)`;
-        }
-
-        // Load data from API
-        async function loadData() {
-            const listContainer = document.getElementById('list');
-            const errorContainer = document.getElementById('error-container');
-
-            // Clear previous content
-            listContainer.innerHTML = '<div class="loading">Loading subway data...</div>';
-            errorContainer.innerHTML = '';
-
-            try {
-                // Fetch data from our Flask endpoint
-                const response = await fetch('/vehicles');
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error ${response.status}`);
-                }
-
-                // Parse the JSON response
-                const data = await response.json();
-
-                if (!data || data.length === 0) {
-                    listContainer.innerHTML = '<div class="loading">No subway data available</div>';
-                    return;
-                }
-
-                // Store the data and apply filters
-                allData = data;
-                filterData();
-                currentPage = 1;
-                displayData();
-
-            } catch (error) {
-                console.error('Error loading data:', error);
-                errorContainer.innerHTML = `<div class="error">Error loading data: ${error.message}</div>`;
-                listContainer.innerHTML = '';
-            }
-        }
-
-        // Load data when page loads
-        document.addEventListener('DOMContentLoaded', loadData);
-    </script>
 </body>
 </html>
