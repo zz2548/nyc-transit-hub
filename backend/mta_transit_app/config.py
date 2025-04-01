@@ -9,7 +9,7 @@ class Config:
     TESTING = False
 
     # Database Configuration
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'postgresql://postgres:root@localhost/nyc_transit')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # JWT Configuration
@@ -25,7 +25,7 @@ class Config:
     GTFS_RT_POLL_INTERVAL = 30  # Based on MTA GTFS-realtime specification
 
     # Redis Cache (for real-time data)
-    REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+    # REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 
     # App-specific settings
     LANGUAGES = ['en', 'es', 'zh', 'ru', 'ko', 'fr']  # Supported languages
@@ -37,7 +37,7 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = 'postgresql://localhost/nyc_transit_test'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
 
 
 class ProductionConfig(Config):
