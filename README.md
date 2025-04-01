@@ -37,15 +37,11 @@ NYC Transit Hub provides real-time transit information including subway and bus 
 ## Technologies
 
 ### Frontend
-- React.js
-- Redux for state management
-- Leaflet.js for mapping
-- i18next for translations
-- Tailwind CSS for styling
+-TBD
 
 ### Backend
 - Python with Flask
-- SQLite with SQLAlchemy ORM
+- SQLite with SQLAlchemy
 - Firebase Authentication
 
 ### DevOps
