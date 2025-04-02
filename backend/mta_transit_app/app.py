@@ -2,13 +2,10 @@ from flask import Flask, jsonify, render_template
 from google.transit import gtfs_realtime_pb2
 import requests
 import time
-import random
-from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from flask_babel import Babel
 from flask_sqlalchemy import SQLAlchemy
 import os
-# import redis
 from datetime import datetime
 
 db = SQLAlchemy()
@@ -34,15 +31,13 @@ def create_app(config_name=None):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
 
-
     # Initialize extensions
     db.init_app(app)
-    migrate = Migrate(app, db)
     jwt = JWTManager(app)
     babel = Babel(app)
-
-    # Set up Redis for caching
-    # app.redis = redis.from_url(app.config.get('REDIS_URL', 'redis://localhost:6379/0'))
+    with app.app_context():
+        db.create_all()
+        fetch_and_store_mta_data()
 
     # Define routes
     @app.route("/")
@@ -52,15 +47,17 @@ def create_app(config_name=None):
     @app.route("/vehicles")
     def vehicles():
         try:
-            # Check if data is cached in Redis
-            # cached_data = app.redis.get('vehicles_data')
-            # if cached_data:
-            #    return jsonify(eval(cached_data))  # Convert string back to list/dict
-
             # Select feeds to process - either use all or pick 2 random ones
             feeds_to_use = list(MTA_FEEDS.values())
 
             results = []
+
+            # Import models for database operations
+            from models import Route, Trip, Stop, TripStop, VehiclePosition
+
+            # Ensure all database operations occur with proper application context
+            # We don't need to create a new context here because Flask automatically
+            # creates a context for each request
 
             for url in feeds_to_use:
                 # Fetch data from MTA API
@@ -83,18 +80,101 @@ def create_app(config_name=None):
                             "stops": []
                         }
 
-                        # Include first 3 stops for brevity
+                        # Use a try-except block for each database operation
+                        try:
+                            # Store trip in database if it doesn't exist
+                            existing_trip = Trip.query.filter_by(id=trip.trip_id).first()
+                            if not existing_trip:
+                                # Ensure route exists
+                                route = Route.query.filter_by(id=trip.route_id).first()
+                                if not route:
+                                    # Create simplified route from route_id
+                                    route_name = trip.route_id.split('_')[0] if '_' in trip.route_id else trip.route_id
+                                    new_route = Route(
+                                        id=trip.route_id,
+                                        short_name=route_name,
+                                        long_name=f"MTA {route_name} Line",
+                                        type=1,  # 1 = Subway
+                                        color="000000",  # Default black
+                                        is_active=True
+                                    )
+                                    db.session.add(new_route)
+                                    db.session.commit()
+
+                                # Create new trip
+                                new_trip = Trip(
+                                    id=trip.trip_id,
+                                    route_id=trip.route_id,
+                                    service_id=trip.start_date or "unknown",
+                                    direction_id=False,  # Default
+                                    is_assigned=True if hasattr(trip, 'nyct_trip_descriptor') and
+                                                        trip.nyct_trip_descriptor.is_assigned else False
+                                )
+                                db.session.add(new_trip)
+                                db.session.commit()
+                        except Exception as e:
+                            db.session.rollback()
+                            print(f"Error storing trip data: {str(e)}")
+                            # Continue processing other entities
+
+                        # Include first 3 stops for brevity in API response
                         for i, stu in enumerate(entity.trip_update.stop_time_update[:3]):
                             arrival_time = None
                             if stu.HasField("arrival") and stu.arrival.HasField("time"):
                                 arrival_time = stu.arrival.time
-                                # Convert timestamp to readable time
+                                # Convert timestamp to readable time for API response
                                 readable_time = time.strftime('%H:%M:%S',
                                                               time.localtime(int(arrival_time)))
                                 trip_data["stops"].append({
                                     "stop_id": stu.stop_id,
                                     "arrival_time": readable_time
                                 })
+
+                                try:
+                                    # Store stop information in database
+                                    stop_id = stu.stop_id
+
+                                    # Ensure stop exists
+                                    existing_stop = Stop.query.filter_by(id=stop_id).first()
+                                    if not existing_stop:
+                                        # Create a new stop with minimal info
+                                        new_stop = Stop(
+                                            id=stop_id,
+                                            name=f"Stop {stop_id}",
+                                            latitude=0.0,  # Placeholder
+                                            longitude=0.0  # Placeholder
+                                        )
+                                        db.session.add(new_stop)
+                                        db.session.commit()
+
+                                    # Create or update trip_stop relationship
+                                    arrival_datetime = datetime.fromtimestamp(arrival_time)
+                                    departure_time = None
+                                    if stu.HasField("departure") and stu.departure.HasField("time"):
+                                        departure_time = datetime.fromtimestamp(stu.departure.time)
+
+                                    # Check if trip stop already exists
+                                    trip_stop = TripStop.query.filter_by(
+                                        trip_id=trip.trip_id,
+                                        stop_id=stop_id,
+                                        stop_sequence=i
+                                    ).first()
+
+                                    if not trip_stop:
+                                        # Create new trip stop
+                                        new_trip_stop = TripStop(
+                                            trip_id=trip.trip_id,
+                                            stop_id=stop_id,
+                                            stop_sequence=i,
+                                            arrival_time=arrival_datetime,
+                                            departure_time=departure_time
+                                        )
+                                        db.session.add(new_trip_stop)
+                                        db.session.commit()
+                                except Exception as e:
+                                    db.session.rollback()
+                                    print(f"Error storing stop data: {str(e)}")
+                                    # Continue processing
 
                         results.append(trip_data)
 
@@ -112,61 +192,58 @@ def create_app(config_name=None):
                                 vehicle_data["route_id"] = vehicle.trip.route_id
                                 vehicle_data["trip_id"] = vehicle.trip.trip_id
 
+                                try:
+                                    # Store vehicle position in database
+                                    vehicle_id = f"{vehicle.trip.trip_id}_{int(time.time())}"
+
+                                    # Ensure trip exists
+                                    trip_id = vehicle.trip.trip_id
+                                    existing_trip = Trip.query.filter_by(id=trip_id).first()
+                                    if not existing_trip:
+                                        # Create new trip record
+                                        new_trip = Trip(
+                                            id=trip_id,
+                                            route_id=vehicle.trip.route_id,
+                                            service_id="unknown",
+                                            direction_id=False,  # Default
+                                            is_assigned=False  # Default
+                                        )
+                                        db.session.add(new_trip)
+                                        db.session.commit()
+
+                                    # Create vehicle position record
+                                    new_position = VehiclePosition(
+                                        id=vehicle_id,
+                                        trip_id=vehicle.trip.trip_id,
+                                        timestamp=datetime.fromtimestamp(vehicle.timestamp),
+                                        latitude=vehicle.position.latitude,
+                                        longitude=vehicle.position.longitude,
+                                        current_status=str(vehicle.current_status)
+                                    )
+                                    db.session.add(new_position)
+                                    db.session.commit()
+                                except Exception as e:
+                                    db.session.rollback()
+                                    print(f"Error storing vehicle data: {str(e)}")
+                                    # Continue processing
+
                             results.append(vehicle_data)
 
-            # Add feed source info to help with debugging
-            results.insert(0, {
-                "type": "info",
-                "message": f"Data from {len(feeds_to_use)} MTA feeds",
-                "feeds_used": [url.split('/')[-1] for url in feeds_to_use],
-                "total_entities": len(results)
-            })
-
-            # Cache the results in Redis for 60 seconds
-            # app.redis.setex('vehicles_data', 60, str(results))
+                # Add feed source info to help with debugging
+                results.insert(0, {
+                    "type": "info",
+                    "message": f"Data from {len(feeds_to_use)} MTA feeds",
+                    "feeds_used": [url.split('/')[-1] for url in feeds_to_use],
+                    "total_entities": len(results)
+                })
 
             # Ensure all data is JSON serializable before returning
             return jsonify(results)
 
         except Exception as e:
-            print(f"Error: {str(e)}")
+            db.session.rollback()  # Roll back transaction on error
+            print(f"Error in vehicles endpoint: {str(e)}")
             return jsonify([{"error": str(e)}])
-
-    # Shell context for flask cli
-    @app.shell_context_processor
-    def make_shell_context():
-        # Import all models here
-        from models import (
-            User, UserPreferences, SavedLocation,
-            FavoriteRoute, FavoriteStation, Alert,
-            Route, Stop, Trip, TripStop, ServiceAlert,
-            VehiclePosition, AccessibilityStatus,
-            StationStatus, RouteStatus, ServiceStatus,
-            SearchHistory, TripHistory
-        )
-
-        return {
-            'db': db,
-            'User': User,
-            'UserPreferences': UserPreferences,
-            'SavedLocation': SavedLocation,
-            'FavoriteRoute': FavoriteRoute,
-            'FavoriteStation': FavoriteStation,
-            'Alert': Alert,
-            'Route': Route,
-            'Stop': Stop,
-            'Trip': Trip,
-            'TripStop': TripStop,
-            'ServiceAlert': ServiceAlert,
-            'VehiclePosition': VehiclePosition,
-            'AccessibilityStatus': AccessibilityStatus,
-            'StationStatus': StationStatus,
-            'RouteStatus': RouteStatus,
-            'ServiceStatus': ServiceStatus,
-            'SearchHistory': SearchHistory,
-            'TripHistory': TripHistory
-        }
-
     @app.route("/api/stats")
     def stats():
         try:
@@ -178,10 +255,10 @@ def create_app(config_name=None):
                     inspector.has_table("trip") and
                     inspector.has_table("route")):
                 return jsonify({
-                    "error": "Database tables do not exist yet. Please run initialization first.",
-                    "vehicle_positions": 0,
-                    "trips": 0,
-                    "routes": 0
+                    "error": "Database tables do not exist yet. Please make a request to initialize the database.",
+                    "vehicle_position": 0,
+                    "trip": 0,
+                    "route": 0
                 })
 
             vehicle_count = VehiclePosition.query.count()
@@ -189,16 +266,16 @@ def create_app(config_name=None):
             route_count = Route.query.count()
 
             return jsonify({
-                "vehicle_positions": vehicle_count,
-                "trips": trip_count,
-                "routes": route_count
+                "vehicle_position": vehicle_count,
+                "trip": trip_count,
+                "route": route_count
             })
         except Exception as e:
             return jsonify({
                 "error": f"Database error: {str(e)}",
-                "vehicle_positions": 0,
-                "trips": 0,
-                "routes": 0
+                "vehicle_position": 0,
+                "trip": 0,
+                "route": 0
             })
 
     @app.route("/api/routes")
@@ -238,14 +315,28 @@ def create_app(config_name=None):
 
         return jsonify(trip_data)
 
+    # Add an explicit initialization route for debugging/testing
+    @app.route("/init-db")
+    def init_db():
+        try:
+            db.create_all()
+            fetch_and_store_mta_data()
+            return jsonify({
+                "status": "success",
+                "message": "Database initialized and data loaded successfully"
+            })
+        except Exception as e:
+            return jsonify({
+                "status": "error",
+                "message": f"Error initializing database: {str(e)}"
+            })
+
     return app
 
 
 def fetch_and_store_mta_data():
-    from models import db, Route, Trip, VehiclePosition, Stop, TripStop
-
+    from models import Route, Trip, Stop, TripStop, VehiclePosition
     print("Fetching and storing MTA data...")
-
     try:
         # First, store basic route information
         for route_id, feed_url in MTA_FEEDS.items():
@@ -355,8 +446,8 @@ def fetch_and_store_mta_data():
 
 
 if __name__ == "__main__":
+    print("Starting application...")
     app = create_app()
-    with app.app_context():
-        db.create_all()
-        fetch_and_store_mta_data()
+    print("App created successfully")
+    print("Starting Flask server - database will be initialized on first request")
     app.run(debug=True)

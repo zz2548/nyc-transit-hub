@@ -7,7 +7,7 @@ from app import db
 
 # User Management Models
 class User(db.Model):
-    __tablename__ = 'users'
+    __tablename__ = 'user'
 
     id = db.Column(db.String(36), primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -37,9 +37,9 @@ class User(db.Model):
 
 
 class UserPreferences(db.Model):
-    __tablename__ = 'user_preferences'
+    __tablename__ = 'user_preference'
 
-    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), primary_key=True)
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'), primary_key=True)
     dark_mode = db.Column(db.Boolean, default=False)
     notifications_enabled = db.Column(db.Boolean, default=True)
     push_notifications_enabled = db.Column(db.Boolean, default=True)
@@ -50,10 +50,10 @@ class UserPreferences(db.Model):
 
 
 class SavedLocation(db.Model):
-    __tablename__ = 'saved_locations'
+    __tablename__ = 'saved_location'
 
     id = db.Column(db.String(36), primary_key=True)
-    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=False)  # Changed from 'users.id' to 'user.id'
     name = db.Column(db.String(64), nullable=False)
     type = db.Column(db.String(16), nullable=False)  # home/work/other
     latitude = db.Column(db.Float, nullable=False)
@@ -65,11 +65,11 @@ class SavedLocation(db.Model):
 
 # Favorites & Alerts Models
 class FavoriteRoute(db.Model):
-    __tablename__ = 'favorite_routes'
+    __tablename__ = 'favorite_route'
 
     id = db.Column(db.String(36), primary_key=True)
-    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
-    route_id = db.Column(db.String(36), db.ForeignKey('routes.id'), nullable=False)
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=False)  # Changed from 'users.id' to 'user.id'
+    route_id = db.Column(db.String(36), db.ForeignKey('route.id'), nullable=False)  # Changed from 'routes.id' to 'route.id'
     nickname = db.Column(db.String(64), nullable=True)
     notifications_enabled = db.Column(db.Boolean, default=True)
 
@@ -81,11 +81,11 @@ class FavoriteRoute(db.Model):
 
 
 class FavoriteStation(db.Model):
-    __tablename__ = 'favorite_stations'
+    __tablename__ = 'favorite_station'
 
     id = db.Column(db.String(36), primary_key=True)
-    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
-    station_id = db.Column(db.String(36), db.ForeignKey('stops.id'), nullable=False)
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=False)  # Changed from 'users.id' to 'user.id'
+    station_id = db.Column(db.String(36), db.ForeignKey('stop.id'), nullable=False)  # Changed from 'stops.id' to 'stop.id'
     nickname = db.Column(db.String(64), nullable=True)
     notifications_enabled = db.Column(db.Boolean, default=True)
 
@@ -97,10 +97,10 @@ class FavoriteStation(db.Model):
 
 
 class Alert(db.Model):
-    __tablename__ = 'alerts'
+    __tablename__ = 'alert'
 
     id = db.Column(db.String(36), primary_key=True)
-    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=False)  # Changed from 'users.id' to 'user.id'
     type = db.Column(db.String(16), nullable=False)  # route/station/system
     entity_id = db.Column(db.String(36), nullable=True)  # routeId or stationId
     conditions = db.Column(ARRAY(db.String), nullable=False)  # [delay, service_change, elevator_outage, etc]
@@ -112,7 +112,7 @@ class Alert(db.Model):
 
 # Transit Data Models
 class Route(db.Model):
-    __tablename__ = 'routes'
+    __tablename__ = 'route'
 
     id = db.Column(db.String(36), primary_key=True)
     short_name = db.Column(db.String(16), nullable=False)
@@ -132,7 +132,7 @@ class Route(db.Model):
 
 
 class Stop(db.Model):
-    __tablename__ = 'stops'
+    __tablename__ = 'stop'
 
     id = db.Column(db.String(36), primary_key=True)
     name = db.Column(db.String(255), nullable=False)
@@ -140,7 +140,7 @@ class Stop(db.Model):
     latitude = db.Column(db.Float, nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     zone_id = db.Column(db.String(36), nullable=True)
-    parent_station = db.Column(db.String(36), db.ForeignKey('stops.id'), nullable=True)
+    parent_station = db.Column(db.String(36), db.ForeignKey('stop.id'), nullable=True)  # Changed from 'stops.id' to 'stop.id'
     wheelchair_boarding = db.Column(db.Boolean, default=False)
 
     # Relationships
@@ -152,10 +152,10 @@ class Stop(db.Model):
 
 
 class Trip(db.Model):
-    __tablename__ = 'trips'
+    __tablename__ = 'trip'
 
     id = db.Column(db.String(36), primary_key=True)
-    route_id = db.Column(db.String(36), db.ForeignKey('routes.id'), nullable=False)
+    route_id = db.Column(db.String(36), db.ForeignKey('route.id'), nullable=False)  # Changed from 'routes.id' to 'route.id'
     service_id = db.Column(db.String(36), nullable=False)
     direction_id = db.Column(db.Boolean, nullable=False)
     shape_id = db.Column(db.String(36), nullable=True)
@@ -171,10 +171,10 @@ class Trip(db.Model):
 
 
 class TripStop(db.Model):
-    __tablename__ = 'trip_stops'
+    __tablename__ = 'trip_stop'
 
-    trip_id = db.Column(db.String(36), db.ForeignKey('trips.id'), primary_key=True)
-    stop_id = db.Column(db.String(36), db.ForeignKey('stops.id'), primary_key=True)
+    trip_id = db.Column(db.String(36), db.ForeignKey('trip.id'), primary_key=True)  # Changed from 'trips.id' to 'trip.id'
+    stop_id = db.Column(db.String(36), db.ForeignKey('stop.id'), primary_key=True)  # Changed from 'stops.id' to 'stop.id'
     arrival_time = db.Column(db.DateTime, nullable=True)
     departure_time = db.Column(db.DateTime, nullable=True)
     stop_sequence = db.Column(db.Integer, primary_key=True)
@@ -191,7 +191,7 @@ class TripStop(db.Model):
 
 
 class ServiceAlert(db.Model):
-    __tablename__ = 'service_alerts'
+    __tablename__ = 'service_alert'
 
     id = db.Column(db.String(36), primary_key=True)
     active_from = db.Column(db.DateTime, nullable=False)
@@ -208,15 +208,15 @@ class ServiceAlert(db.Model):
 
 
 class VehiclePosition(db.Model):
-    __tablename__ = 'vehicle_positions'
+    __tablename__ = 'vehicle_position'
 
     id = db.Column(db.String(36), primary_key=True)
-    trip_id = db.Column(db.String(36), db.ForeignKey('trips.id'), nullable=False)
+    trip_id = db.Column(db.String(36), db.ForeignKey('trip.id'), nullable=False)  # Changed from 'trips.id' to 'trip.id'
     timestamp = db.Column(db.DateTime, nullable=False)
     latitude = db.Column(db.Float, nullable=True)
     longitude = db.Column(db.Float, nullable=True)
     current_stop_sequence = db.Column(db.Integer, nullable=True)
-    current_stop_id = db.Column(db.String(36), db.ForeignKey('stops.id'), nullable=True)
+    current_stop_id = db.Column(db.String(36), db.ForeignKey('stop.id'), nullable=True)  # Changed from 'stops.id' to 'stop.id'
     current_status = db.Column(db.String(16), nullable=True)  # STOPPED_AT, INCOMING_AT, IN_TRANSIT_TO
     congestion_level = db.Column(db.Integer, nullable=True)
 
@@ -231,7 +231,7 @@ class AccessibilityStatus(db.Model):
     __tablename__ = 'accessibility_status'
 
     equipment_id = db.Column(db.String(36), primary_key=True)
-    station_id = db.Column(db.String(36), db.ForeignKey('stops.id'), nullable=False)
+    station_id = db.Column(db.String(36), db.ForeignKey('stop.id'), nullable=False)  # Changed from 'stops.id' to 'stop.id'
     equipment_type = db.Column(db.String(16), nullable=False)  # elevator/escalator
     is_operational = db.Column(db.Boolean, default=True)
     outage_reason = db.Column(db.String(255), nullable=True)
@@ -246,7 +246,7 @@ class AccessibilityStatus(db.Model):
 class StationStatus(db.Model):
     __tablename__ = 'station_status'
 
-    station_id = db.Column(db.String(36), db.ForeignKey('stops.id'), primary_key=True)
+    station_id = db.Column(db.String(36), db.ForeignKey('stop.id'), primary_key=True)  # Changed from 'stops.id' to 'stop.id'
     last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     crowd_level = db.Column(db.Integer, nullable=True)
     upcoming_arrivals = db.Column(JSON, nullable=True)  # Array of {routeId, tripId, direction, arrivalTime}
@@ -262,7 +262,7 @@ class StationStatus(db.Model):
 class RouteStatus(db.Model):
     __tablename__ = 'route_status'
 
-    route_id = db.Column(db.String(36), db.ForeignKey('routes.id'), primary_key=True)
+    route_id = db.Column(db.String(36), db.ForeignKey('route.id'), primary_key=True)  # Changed from 'routes.id' to 'route.id'
     last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     status = db.Column(db.String(32), nullable=False)  # normal, delayed, service_change, planned_work
     alerts = db.Column(ARRAY(db.String), nullable=True)  # Array of alertIds
@@ -295,7 +295,7 @@ class SearchHistory(db.Model):
     __tablename__ = 'search_history'
 
     id = db.Column(db.String(36), primary_key=True)
-    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=False)  # Changed from 'users.id' to 'user.id'
     query = db.Column(db.String(255), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     result_count = db.Column(db.Integer, nullable=True)
@@ -308,9 +308,9 @@ class TripHistory(db.Model):
     __tablename__ = 'trip_history'
 
     id = db.Column(db.String(36), primary_key=True)
-    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
-    origin_stop_id = db.Column(db.String(36), db.ForeignKey('stops.id'), nullable=False)
-    destination_stop_id = db.Column(db.String(36), db.ForeignKey('stops.id'), nullable=False)
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=False)  # Changed from 'users.id' to 'user.id'
+    origin_stop_id = db.Column(db.String(36), db.ForeignKey('stop.id'), nullable=False)  # Changed from 'stops.id' to 'stop.id'
+    destination_stop_id = db.Column(db.String(36), db.ForeignKey('stop.id'), nullable=False)  # Changed from 'stops.id' to 'stop.id'
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     routes_used = db.Column(ARRAY(db.String), nullable=True)  # Array of routeIds
 
