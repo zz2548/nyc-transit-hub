@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, ForeignKey, Time, CheckConstraint
+from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, ForeignKey, Time, CheckConstraint, PrimaryKeyConstraint
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from google.transit import gtfs_realtime_pb2
 import requests
@@ -60,9 +60,15 @@ class stop_times(Base):
     __tablename__ = 'stop_times'
     trip_id	= Column(String, ForeignKey('trips.trip_id'), nullable=False)
     stop_id	= Column(String)
-    arrival_time = Column(Time)
-    departure_time = Column(Time)
-    stop_sequence = Column(Integer, primary_key=True)
+    # arrival_time = Column(Time)
+    # departure_time = Column(Time) 不可行，datetime不好处理，且存在25:00:00的特殊数据
+    arrival_time = Column(String)
+    departure_time = Column(String)
+    # stop_sequence = Column(Integer, primary_key=True) 不可行，主键不是stop_sequence
+    stop_sequence = Column(Integer, nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('trip_id', 'stop_sequence'),
+    )
 
 class calendar(Base):
     __tablename__ = 'calendar'
@@ -79,7 +85,8 @@ class calendar(Base):
 
 class shapes(Base):
     __tablename__ = 'shapes'
-    shape_id = Column(String, primary_key=True)
+    id = Column(Integer, primary_key=True)
+    shape_id = Column(String)
     shape_pt_sequence = Column(Integer, nullable=False)
     shape_pt_lat = Column(Float, nullable=False)
     shape_pt_lon = Column(Float, nullable=False)
@@ -91,6 +98,9 @@ class transfers(Base):
     to_stop_id = Column(String, ForeignKey('stops.stop_id'))
     transfer_type = Column(Integer, nullable=False)
     min_transfer_time = Column(Integer, CheckConstraint('min_transfer_time >= 0'))
+
+# 创建数据库表
+Base.metadata.create_all(engine)
 
 # 未来可能的实时缓存数据保存在这里(不是最终版)
 # # 定义 ORM 模型
@@ -137,5 +147,3 @@ class transfers(Base):
 
 #     feed_entity = relationship("FeedEntity", back_populates="alert")
 
-# 创建数据库表
-Base.metadata.create_all(engine)
