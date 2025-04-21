@@ -1,322 +1,158 @@
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.dialects.postgresql import ARRAY, JSON
-from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
-from app import db
+from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, ForeignKey, Time, CheckConstraint, PrimaryKeyConstraint
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+from google.transit import gtfs_realtime_pb2
+import requests
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Get the directory of the script
+db_path = os.path.join(BASE_DIR, "instance", "gtfs.db")  # Combine database path
+
+# Create database connection
+DATABASE_URL = f"sqlite:///{db_path}"  # Generate SQLite URL
+engine = create_engine(DATABASE_URL, echo=True)  # echo=True displays SQL statements
+Base = declarative_base()
+SessionLocal = sessionmaker(bind=engine)
 
 
-# User Management Models
-class User(db.Model):
-    __tablename__ = 'users'
-
-    id = db.Column(db.String(36), primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
-    display_name = db.Column(db.String(64), nullable=True)
-    preferred_language = db.Column(db.String(10), default='en')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_login = db.Column(db.DateTime, nullable=True)
-
-    # Relationships
-    preferences = db.relationship('UserPreferences', backref='user', uselist=False, cascade='all, delete-orphan')
-    saved_locations = db.relationship('SavedLocation', backref='user', lazy=True, cascade='all, delete-orphan')
-    favorite_routes = db.relationship('FavoriteRoute', backref='user', lazy=True, cascade='all, delete-orphan')
-    favorite_stations = db.relationship('FavoriteStation', backref='user', lazy=True, cascade='all, delete-orphan')
-    alerts = db.relationship('Alert', backref='user', lazy=True, cascade='all, delete-orphan')
-    search_history = db.relationship('SearchHistory', backref='user', lazy=True, cascade='all, delete-orphan')
-    trip_history = db.relationship('TripHistory', backref='user', lazy=True, cascade='all, delete-orphan')
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
-
-    def __repr__(self):
-        return f'<User {self.email}>'
+class Agency(Base):
+    __tablename__ = 'agency'
+    agency_id = Column(String, primary_key=True)
+    agency_name = Column(String, nullable=False)
+    agency_url = Column(String, nullable=False)
+    agency_timezone = Column(String, nullable=False)
+    agency_lang = Column(String)
+    agency_phone = Column(String)
 
 
-class UserPreferences(db.Model):
-    __tablename__ = 'user_preferences'
-
-    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), primary_key=True)
-    dark_mode = db.Column(db.Boolean, default=False)
-    notifications_enabled = db.Column(db.Boolean, default=True)
-    push_notifications_enabled = db.Column(db.Boolean, default=True)
-    email_notifications_enabled = db.Column(db.Boolean, default=True)
-
-    def __repr__(self):
-        return f'<UserPreferences for user {self.user_id}>'
-
-
-class SavedLocation(db.Model):
-    __tablename__ = 'saved_locations'
-
-    id = db.Column(db.String(36), primary_key=True)
-    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
-    name = db.Column(db.String(64), nullable=False)
-    type = db.Column(db.String(16), nullable=False)  # home/work/other
-    latitude = db.Column(db.Float, nullable=False)
-    longitude = db.Column(db.Float, nullable=False)
-
-    def __repr__(self):
-        return f'<SavedLocation {self.name} for user {self.user_id}>'
-
-
-# Favorites & Alerts Models
-class FavoriteRoute(db.Model):
-    __tablename__ = 'favorite_routes'
-
-    id = db.Column(db.String(36), primary_key=True)
-    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
-    route_id = db.Column(db.String(36), db.ForeignKey('routes.id'), nullable=False)
-    nickname = db.Column(db.String(64), nullable=True)
-    notifications_enabled = db.Column(db.Boolean, default=True)
-
-    # Relationships
-    route = db.relationship('Route', backref='favorited_by')
-
-    def __repr__(self):
-        return f'<FavoriteRoute {self.route_id} for user {self.user_id}>'
-
-
-class FavoriteStation(db.Model):
-    __tablename__ = 'favorite_stations'
-
-    id = db.Column(db.String(36), primary_key=True)
-    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
-    station_id = db.Column(db.String(36), db.ForeignKey('stops.id'), nullable=False)
-    nickname = db.Column(db.String(64), nullable=True)
-    notifications_enabled = db.Column(db.Boolean, default=True)
-
-    # Relationships
-    station = db.relationship('Stop', backref='favorited_by')
-
-    def __repr__(self):
-        return f'<FavoriteStation {self.station_id} for user {self.user_id}>'
-
-
-class Alert(db.Model):
-    __tablename__ = 'alerts'
-
-    id = db.Column(db.String(36), primary_key=True)
-    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
-    type = db.Column(db.String(16), nullable=False)  # route/station/system
-    entity_id = db.Column(db.String(36), nullable=True)  # routeId or stationId
-    conditions = db.Column(ARRAY(db.String), nullable=False)  # [delay, service_change, elevator_outage, etc]
-    time_ranges = db.Column(JSON, nullable=True)  # Array of {days: [], startTime: Time, endTime: Time}
-
-    def __repr__(self):
-        return f'<Alert {self.id} for user {self.user_id}>'
-
-
-# Transit Data Models
-class Route(db.Model):
-    __tablename__ = 'routes'
-
-    id = db.Column(db.String(36), primary_key=True)
-    short_name = db.Column(db.String(16), nullable=False)
-    long_name = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    type = db.Column(db.Integer, nullable=False)
-    color = db.Column(db.String(6), nullable=True)
-    text_color = db.Column(db.String(6), nullable=True)
-    is_active = db.Column(db.Boolean, default=True)
-    agency_id = db.Column(db.String(36), nullable=True)
-
-    # Relationships
-    trips = db.relationship('Trip', backref='route', lazy=True)
-
-    def __repr__(self):
-        return f'<Route {self.short_name}>'
-
-
-class Stop(db.Model):
+class Stops(Base):
     __tablename__ = 'stops'
+    stop_id = Column(String, primary_key=True)
+    stop_name = Column(String)
+    stop_lat = Column(Float)
+    stop_lon = Column(Float)
+    location_type = Column(Integer)
+    parent_station = Column(String, ForeignKey('stops.stop_id'))
 
-    id = db.Column(db.String(36), primary_key=True)
-    name = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    latitude = db.Column(db.Float, nullable=False)
-    longitude = db.Column(db.Float, nullable=False)
-    zone_id = db.Column(db.String(36), nullable=True)
-    parent_station = db.Column(db.String(36), db.ForeignKey('stops.id'), nullable=True)
-    wheelchair_boarding = db.Column(db.Boolean, default=False)
-
-    # Relationships
-    child_stops = db.relationship('Stop', backref=db.backref('parent', remote_side=[id]))
-    accessibility_equipment = db.relationship('AccessibilityStatus', backref='station', lazy=True)
-
-    def __repr__(self):
-        return f'<Stop {self.name}>'
+    parent = relationship('Stops', remote_side=[stop_id])
 
 
-class Trip(db.Model):
+class Routes(Base):
+    __tablename__ = 'routes'
+    route_id = Column(String, primary_key=True)
+    agency_id = Column(String, ForeignKey('agency.agency_id'))
+    route_short_name = Column(String)
+    route_long_name = Column(String)
+    route_desc = Column(String)
+    route_type = Column(Integer)
+    route_url = Column(String)
+    route_color = Column(String)
+    route_text_color = Column(String)
+
+    agency = relationship('Agency')
+
+
+class Trips(Base):
     __tablename__ = 'trips'
-
-    id = db.Column(db.String(36), primary_key=True)
-    route_id = db.Column(db.String(36), db.ForeignKey('routes.id'), nullable=False)
-    service_id = db.Column(db.String(36), nullable=False)
-    direction_id = db.Column(db.Boolean, nullable=False)
-    shape_id = db.Column(db.String(36), nullable=True)
-    is_assigned = db.Column(db.Boolean, default=False)
-    nyct_train_id = db.Column(db.String(36), nullable=True)
-
-    # Relationships
-    stops = db.relationship('TripStop', backref='trip', lazy=True, cascade='all, delete-orphan')
-    vehicle_positions = db.relationship('VehiclePosition', backref='trip', lazy=True, cascade='all, delete-orphan')
-
-    def __repr__(self):
-        return f'<Trip {self.id} on route {self.route_id}>'
+    route_id = Column(String, ForeignKey('routes.route_id'), nullable=False)
+    service_id = Column(String, ForeignKey('calendar.service_id'), nullable=False)
+    trip_id = Column(String, primary_key=True)
+    trip_headsign = Column(String)
+    direction_id = Column(Integer)
+    shape_id = Column(String, ForeignKey('shapes.shape_id'))
 
 
-class TripStop(db.Model):
-    __tablename__ = 'trip_stops'
-
-    trip_id = db.Column(db.String(36), db.ForeignKey('trips.id'), primary_key=True)
-    stop_id = db.Column(db.String(36), db.ForeignKey('stops.id'), primary_key=True)
-    arrival_time = db.Column(db.DateTime, nullable=True)
-    departure_time = db.Column(db.DateTime, nullable=True)
-    stop_sequence = db.Column(db.Integer, primary_key=True)
-    pickup_type = db.Column(db.Integer, nullable=True)
-    drop_off_type = db.Column(db.Integer, nullable=True)
-    scheduled_track = db.Column(db.String(8), nullable=True)
-    actual_track = db.Column(db.String(8), nullable=True)
-
-    # Relationships
-    stop = db.relationship('Stop')
-
-    def __repr__(self):
-        return f'<TripStop for trip {self.trip_id} at stop {self.stop_id}>'
+class StopTimes(Base):
+    __tablename__ = 'stop_times'
+    trip_id = Column(String, ForeignKey('trips.trip_id'), nullable=False)
+    stop_id = Column(String)
+    # arrival_time = Column(Time)
+    # departure_time = Column(Time) not feasible, datetime is difficult to handle, and there's special data like 25:00:00
+    arrival_time = Column(String)
+    departure_time = Column(String)
+    # stop_sequence = Column(Integer, primary_key=True) not feasible, primary key is not stop_sequence
+    stop_sequence = Column(Integer, nullable=False)
+    __table_args__ = (
+        PrimaryKeyConstraint('trip_id', 'stop_sequence'),
+    )
 
 
-class ServiceAlert(db.Model):
-    __tablename__ = 'service_alerts'
-
-    id = db.Column(db.String(36), primary_key=True)
-    active_from = db.Column(db.DateTime, nullable=False)
-    active_to = db.Column(db.DateTime, nullable=True)
-    affected_entities = db.Column(JSON, nullable=False)  # Array of {entityType: String, entityId: String}
-    header_text = db.Column(db.String(255), nullable=False)
-    description_text = db.Column(db.Text, nullable=True)
-    cause = db.Column(db.String(64), nullable=True)
-    effect = db.Column(db.String(64), nullable=True)
-    url = db.Column(db.String(255), nullable=True)
-
-    def __repr__(self):
-        return f'<ServiceAlert {self.id}>'
+class Calendar(Base):
+    __tablename__ = 'calendar'
+    service_id = Column(String, primary_key=True)
+    monday = Column(Integer, nullable=False)
+    tuesday = Column(Integer, nullable=False)
+    wednesday = Column(Integer, nullable=False)
+    thursday = Column(Integer, nullable=False)
+    friday = Column(Integer, nullable=False)
+    saturday = Column(Integer, nullable=False)
+    sunday = Column(Integer, nullable=False)
+    start_date = Column(String, nullable=False)
+    end_date = Column(String, nullable=False)
 
 
-class VehiclePosition(db.Model):
-    __tablename__ = 'vehicle_positions'
-
-    id = db.Column(db.String(36), primary_key=True)
-    trip_id = db.Column(db.String(36), db.ForeignKey('trips.id'), nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False)
-    latitude = db.Column(db.Float, nullable=True)
-    longitude = db.Column(db.Float, nullable=True)
-    current_stop_sequence = db.Column(db.Integer, nullable=True)
-    current_stop_id = db.Column(db.String(36), db.ForeignKey('stops.id'), nullable=True)
-    current_status = db.Column(db.String(16), nullable=True)  # STOPPED_AT, INCOMING_AT, IN_TRANSIT_TO
-    congestion_level = db.Column(db.Integer, nullable=True)
-
-    # Relationships
-    current_stop = db.relationship('Stop')
-
-    def __repr__(self):
-        return f'<VehiclePosition for trip {self.trip_id}>'
+class Shapes(Base):
+    __tablename__ = 'shapes'
+    id = Column(Integer, primary_key=True)
+    shape_id = Column(String)
+    shape_pt_sequence = Column(Integer, nullable=False)
+    shape_pt_lat = Column(Float, nullable=False)
+    shape_pt_lon = Column(Float, nullable=False)
 
 
-class AccessibilityStatus(db.Model):
-    __tablename__ = 'accessibility_status'
-
-    equipment_id = db.Column(db.String(36), primary_key=True)
-    station_id = db.Column(db.String(36), db.ForeignKey('stops.id'), nullable=False)
-    equipment_type = db.Column(db.String(16), nullable=False)  # elevator/escalator
-    is_operational = db.Column(db.Boolean, default=True)
-    outage_reason = db.Column(db.String(255), nullable=True)
-    estimated_return_to_service = db.Column(db.DateTime, nullable=True)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    def __repr__(self):
-        return f'<AccessibilityStatus {self.equipment_id} at station {self.station_id}>'
+class Transfers(Base):
+    __tablename__ = 'transfers'
+    id = Column(Integer, primary_key=True)
+    from_stop_id = Column(String, ForeignKey('stops.stop_id'))
+    to_stop_id = Column(String, ForeignKey('stops.stop_id'))
+    transfer_type = Column(Integer, nullable=False)
+    min_transfer_time = Column(Integer, CheckConstraint('min_transfer_time >= 0'))
 
 
-# Real-time Caching Models
-class StationStatus(db.Model):
-    __tablename__ = 'station_status'
-
-    station_id = db.Column(db.String(36), db.ForeignKey('stops.id'), primary_key=True)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    crowd_level = db.Column(db.Integer, nullable=True)
-    upcoming_arrivals = db.Column(JSON, nullable=True)  # Array of {routeId, tripId, direction, arrivalTime}
-    alerts = db.Column(ARRAY(db.String), nullable=True)  # Array of alertIds
-
-    # Relationships
-    station = db.relationship('Stop')
-
-    def __repr__(self):
-        return f'<StationStatus for station {self.station_id}>'
+# Create database tables
+Base.metadata.create_all(engine)
 
 
-class RouteStatus(db.Model):
-    __tablename__ = 'route_status'
-
-    route_id = db.Column(db.String(36), db.ForeignKey('routes.id'), primary_key=True)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    status = db.Column(db.String(32), nullable=False)  # normal, delayed, service_change, planned_work
-    alerts = db.Column(ARRAY(db.String), nullable=True)  # Array of alertIds
-
-    # Relationships
-    route = db.relationship('Route')
-
-    def __repr__(self):
-        return f'<RouteStatus for route {self.route_id}>'
-
-
-class ServiceStatus(db.Model):
-    __tablename__ = 'service_status'
-
-    id = db.Column(db.String(36), primary_key=True)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    subway = db.Column(JSON, nullable=True)  # {status: String, details: String}
-    bus = db.Column(JSON, nullable=True)
-    lirr = db.Column(JSON, nullable=True)
-    metro_north = db.Column(JSON, nullable=True)
-    bridges = db.Column(JSON, nullable=True)
-    tunnels = db.Column(JSON, nullable=True)
-
-    def __repr__(self):
-        return f'<ServiceStatus {self.id}>'
-
-
-# User Activity Models
-class SearchHistory(db.Model):
-    __tablename__ = 'search_history'
-
-    id = db.Column(db.String(36), primary_key=True)
-    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
-    query = db.Column(db.String(255), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    result_count = db.Column(db.Integer, nullable=True)
-
-    def __repr__(self):
-        return f'<SearchHistory {self.id} for user {self.user_id}>'
-
-
-class TripHistory(db.Model):
-    __tablename__ = 'trip_history'
-
-    id = db.Column(db.String(36), primary_key=True)
-    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
-    origin_stop_id = db.Column(db.String(36), db.ForeignKey('stops.id'), nullable=False)
-    destination_stop_id = db.Column(db.String(36), db.ForeignKey('stops.id'), nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    routes_used = db.Column(ARRAY(db.String), nullable=True)  # Array of routeIds
-
-    # Relationships
-    origin = db.relationship('Stop', foreign_keys=[origin_stop_id])
-    destination = db.relationship('Stop', foreign_keys=[destination_stop_id])
-
-    def __repr__(self):
-        return f'<TripHistory {self.id} for user {self.user_id}>'
+# Potential real-time cache data storage for future use (not final version)
+# # Define ORM models
+# class FeedEntity(Base):
+#     __tablename__ = "feed_entity"
+#     id = Column(String, primary_key=True)
+#     is_deleted = Column(Boolean, default=False, nullable=True)
+#     trip_update_id = Column(Integer, ForeignKey("trip_update.id"), nullable=True)
+#     vehicle_id = Column(Integer, ForeignKey("vehicle_position.id"), nullable=True)
+#     alert_id = Column(Integer, ForeignKey("alert.id"), nullable=True)
+#
+#     trip_update = relationship("TripUpdate", back_populates="feed_entity")
+#     vehicle = relationship("VehiclePosition", back_populates="feed_entity")
+#     alert = relationship("Alert", back_populates="feed_entity")
+#     # The first parameter is the Python class name (not table name)
+#     # The second parameter is the attribute name in the ORM class (not table name)
+#
+# class TripUpdate(Base):
+#     __tablename__ = "trip_update"
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+#     trip_id = Column(String)
+#     route_id = Column(String)
+#     arrival_time = Column(Integer)
+#     departure_time = Column(Integer)
+#
+#     feed_entity = relationship("FeedEntity", back_populates="trip_update")
+#
+# class VehiclePosition(Base):
+#     __tablename__ = "vehicle_position"
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+#     latitude = Column(Float)
+#     longitude = Column(Float)
+#     speed = Column(Float)
+#     bearing = Column(Float)
+#
+#     feed_entity = relationship("FeedEntity", back_populates="vehicle")
+#
+# class Alert(Base):
+#     __tablename__ = "alert"
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+#     header_text = Column(String)
+#     description_text = Column(String)
+#     effect = Column(String)
+#
+#     feed_entity = relationship("FeedEntity", back_populates="alert")

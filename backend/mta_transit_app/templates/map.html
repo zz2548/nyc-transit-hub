@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ route.route_short_name }} Train Tracker | NYC Subway</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin=""/>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+        #map {
+            height: 80vh;
+            width: 100%;
+        }
+        .header {
+            padding: 10px;
+            text-align: center;
+            background-color: #{{ route.route_color }};
+            color: white;
+        }
+        .train-line-badge {
+            display: inline-block;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #{{ route.route_color }};
+            color: white;
+            text-align: center;
+            line-height: 36px;
+            font-weight: bold;
+            font-size: 18px;
+            margin-right: 10px;
+        }
+        .train-marker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background-color: #{{ route.route_color }};
+            border-radius: 50%;
+            color: white;
+            font-weight: bold;
+            border: 2px solid white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        .station-marker {
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border: 2px solid #{{ route.route_color }};
+            border-radius: 50%;
+        }
+        .info-panel {
+            background-color: white;
+            padding: 10px 15px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        #trainInfo {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .legend {
+            padding: 6px 8px;
+            background: white;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+            line-height: 24px;
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+        .back-button {
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><span class="train-line-badge">{{ route.route_short_name }}</span> {{ route.route_long_name }}</h1>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-9">
+                <div id="map"></div>
+            </div>
+            <div class="col-md-3">
+                <div class="info-panel">
+                    <h4>Train Information</h4>
+                    <p class="text-muted">Real-time information about {{ route.route_short_name }} trains</p>
+
+                    <div id="trainInfo">
+                        <div class="alert alert-info">
+                            Loading train information...
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <h5>Last Updated</h5>
+                    <p id="lastUpdated">-</p>
+
+                    <button class="btn btn-sm btn-primary" id="refreshButton">Refresh Data</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-2">
+            <div class="col-md-12">
+                <a href="/" class="btn btn-secondary back-button">← Back to All Lines</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
+    <script>
+        // Parse stops data passed from Flask
+        const stops = {{ stops|safe }};
+
+        // Initialize map
+        const map = L.map('map').setView([40.7128, -74.0060], 12);
+
+        // Add tile layer (OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Add stops to map
+        const stationMarkers = [];
+        stops.forEach(stop => {
+            const marker = L.circleMarker([stop.lat, stop.lon], {
+                radius: 4,
+                fillColor: '#{{ route.route_color }}',
+                color: 'white',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).addTo(map);
+
+            marker.bindPopup(`<strong>${stop.stop_name}</strong><br>Station ID: ${stop.stop_id}`);
+            stationMarkers.push(marker);
+        });
+
+        // Fit map to station markers
+        if (stationMarkers.length > 0) {
+            const stationGroup = L.featureGroup(stationMarkers);
+            map.fitBounds(stationGroup.getBounds());
+        }
+
+        // Add legend
+        const legend = L.control({position: 'bottomright'});
+        legend.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `
+                <i style="background:#{{ route.route_color }}; border-radius:50%;"></i> Train<br>
+                <i style="background:white; border:2px solid #{{ route.route_color }}; border-radius:50%;"></i> Station
+            `;
+            return div;
+        };
+        legend.addTo(map);
+
+        // Train markers
+        let trainMarkers = [];
+
+        // Function to fetch and display train data
+        function fetchTrains() {
+            fetch(`/api/trains/{{ route.route_id }}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Clear existing markers
+                    trainMarkers.forEach(marker => marker.remove());
+                    trainMarkers = [];
+
+                    // Update info panel
+                    const trainInfo = document.getElementById('trainInfo');
+                    if (data.length === 0) {
+                        trainInfo.innerHTML = '<div class="alert alert-warning">No trains currently in service.</div>';
+                    } else {
+                        let infoHTML = '<div class="list-group">';
+
+                        // Add new markers
+                        data.forEach(train => {
+                            // Create train marker
+                            const trainIcon = L.divIcon({
+                                className: 'train-marker',
+                                html: `<span>{{ route.route_short_name }}</span>`,
+                                iconSize: [30, 30]
+                            });
+
+                            const marker = L.marker([train.lat, train.lon], {icon: trainIcon}).addTo(map);
+
+                            // Create popup
+                            let status = 'Unknown';
+                            if (train.status === 0) status = 'In Transit';
+                            if (train.status === 1) status = 'Approaching';
+                            if (train.status === 2) status = 'Stopped At';
+
+                            let stopInfo = '';
+                            if (train.stop_id) {
+                                stopInfo = `<br>${status}: ${train.stop_name || train.stop_id}`;
+                            }
+
+                            marker.bindPopup(`<strong>{{ route.route_short_name }} Train</strong><br>Trip ID: ${train.trip_id}${stopInfo}`);
+
+                            trainMarkers.push(marker);
+
+                            // Add to info panel
+                            const timestamp = new Date(train.timestamp * 1000).toLocaleTimeString();
+                            infoHTML += `
+                                <div class="list-group-item">
+                                    <strong>Train ID:</strong> ${train.trip_id}<br>
+                                    <strong>Status:</strong> ${status}
+                                    ${train.stop_name ? `<br><strong>Station:</strong> ${train.stop_name}` : ''}
+                                    <br><strong>Updated:</strong> ${timestamp}
+                                </div>
+                            `;
+                        });
+
+                        infoHTML += '</div>';
+                        trainInfo.innerHTML = infoHTML;
+                    }
+
+                    // Update last updated time
+                    document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+                })
+                .catch(error => {
+                    console.error('Error fetching train data:', error);
+                    document.getElementById('trainInfo').innerHTML =
+                        '<div class="alert alert-danger">Error loading train data. Please try again.</div>';
+                });
+        }
+
+        // Initial fetch
+        fetchTrains();
+
+        // Set up refresh interval (every 30 seconds)
+        const refreshInterval = setInterval(fetchTrains, 30000);
+
+        // Refresh button
+        document.getElementById('refreshButton').addEventListener('click', fetchTrains);
+
+        // Clean up interval on page unload
+        window.addEventListener('beforeunload', () => {
+            clearInterval(refreshInterval);
+        });
+    </script>
+</body>
+</html>

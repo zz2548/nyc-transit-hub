@@ -1,362 +1,293 @@
-from flask import Flask, jsonify, render_template
-from google.transit import gtfs_realtime_pb2
-import requests
-import time
-import random
-from flask_migrate import Migrate
-from flask_jwt_extended import JWTManager
-from flask_babel import Babel
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, render_template, jsonify, request
 import os
-# import redis
-from datetime import datetime
+import requests
+import json
+import time
+from google.transit import gtfs_realtime_pb2
+from db import get_db_connection
 
-db = SQLAlchemy()
-from config import config
+# Load environment variables
 
-# MTA feed URLs
+app = Flask(__name__)
+
+
+
+# MTA subway feed URLs by line
+# Shuttle special naming:
+# H: Rockaway park shuttle, denoted as Sr on mta.info
+# 0: 42nd St Shuttle, denoted as S on mta.info
+# S: Franklin avenue shuttle, denoted as Sf on mta.info
 MTA_FEEDS = {
-    "A-C-E-Srockaway": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace",
-    "G": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-g",
-    "N-Q-R-W": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-nqrw",
-    "1-2-3-4-5-6-7-S": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs",
-    "B-D-F-M-Sfranklin": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm",
-    "J-Z": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-jz",
-    "L": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-l",
-    "SIR": "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-si"
+    'A-C-E-H': 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace',
+    'B-D-F-M-S': 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm',
+    '1-2-3-4-5-6-7-0': 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs',
+    'G': 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-g',
+    'J-Z': 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-jz',
+    'L': 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-l',
+    'N-Q-R-W': 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-nqrw',
+    'SI': 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-si',
+}
+
+# Map route_id prefixes to their feed
+ROUTE_TO_FEED = {
+    'A': 'A-C-E-H', 'C': 'A-C-E-H', 'E': 'A-C-E-H', 'H': 'A-C-E-H',
+    'B': 'B-D-F-M-S', 'D': 'B-D-F-M-S', 'F': 'B-D-F-M-S', 'M': 'B-D-F-M-S',
+    'S': 'B-D-F-M-S',
+    '1': '1-2-3-4-5-6-7-0', '2': '1-2-3-4-5-6-7-0', '3': '1-2-3-4-5-6-7-0',
+    '4': '1-2-3-4-5-6-7-0', '5': '1-2-3-4-5-6-7-0', '6': '1-2-3-4-5-6-7-0',
+    '7': '1-2-3-4-5-6-7-0', '0': '1-2-3-4-5-6-7-0',
+    'G': 'G',
+    'J': 'J-Z', 'Z': 'J-Z',
+    'L': 'L',
+    'N': 'N-Q-R-W', 'Q': 'N-Q-R-W', 'R': 'N-Q-R-W', 'W': 'N-Q-R-W',
+    'SI': 'SI',
 }
 
 
-def create_app(config_name=None):
-    if config_name is None:
-        config_name = os.environ.get('FLASK_CONFIG', 'default')
+def fetch_realtime_data(feed_url):
+    """Fetch real-time data from MTA API."""
+    try:
+        response = requests.get(feed_url)
+        app.logger.info(f"Response status: {response.status_code}")
+        app.logger.debug(f"Response headers: {response.headers}")
+        app.logger.debug(f"Response length: {len(response.content)} bytes")
 
-    app = Flask(__name__)
-    app.config.from_object(config[config_name])
+        if response.status_code != 200:
+            app.logger.error(f"Failed to fetch data: {response.status_code}")
+            return None
 
-
-    # Initialize extensions
-    db.init_app(app)
-    migrate = Migrate(app, db)
-    jwt = JWTManager(app)
-    babel = Babel(app)
-
-    # Set up Redis for caching
-    # app.redis = redis.from_url(app.config.get('REDIS_URL', 'redis://localhost:6379/0'))
-
-    # Define routes
-    @app.route("/")
-    def home():
-        return render_template('index.html')
-
-    @app.route("/vehicles")
-    def vehicles():
+        feed = gtfs_realtime_pb2.FeedMessage()
         try:
-            # Check if data is cached in Redis
-            # cached_data = app.redis.get('vehicles_data')
-            # if cached_data:
-            #    return jsonify(eval(cached_data))  # Convert string back to list/dict
-
-            # Select feeds to process - either use all or pick 2 random ones
-            feeds_to_use = list(MTA_FEEDS.values())
-
-            results = []
-
-            for url in feeds_to_use:
-                # Fetch data from MTA API
-                response = requests.get(url, timeout=1000)
-
-                # Parse the protocol buffer
-                feed = gtfs_realtime_pb2.FeedMessage()
-                feed.ParseFromString(response.content)
-
-                # Extract and transform data - process more entities
-                for entity in feed.entity[:100]:
-                    if entity.HasField("trip_update"):
-                        trip = entity.trip_update.trip
-                        trip_data = {
-                            "type": "trip_update",
-                            "id": entity.id,
-                            "route_id": trip.route_id,
-                            "trip_id": trip.trip_id,
-                            "start_date": trip.start_date,
-                            "stops": []
-                        }
-
-                        # Include first 3 stops for brevity
-                        for i, stu in enumerate(entity.trip_update.stop_time_update[:3]):
-                            arrival_time = None
-                            if stu.HasField("arrival") and stu.arrival.HasField("time"):
-                                arrival_time = stu.arrival.time
-                                # Convert timestamp to readable time
-                                readable_time = time.strftime('%H:%M:%S',
-                                                              time.localtime(int(arrival_time)))
-                                trip_data["stops"].append({
-                                    "stop_id": stu.stop_id,
-                                    "arrival_time": readable_time
-                                })
-
-                        results.append(trip_data)
-
-                    elif entity.HasField("vehicle"):
-                        if entity.vehicle.HasField("position"):
-                            vehicle = entity.vehicle
-                            vehicle_data = {
-                                "type": "vehicle",
-                                "id": entity.id,
-                                "latitude": vehicle.position.latitude,
-                                "longitude": vehicle.position.longitude
-                            }
-
-                            if vehicle.HasField("trip"):
-                                vehicle_data["route_id"] = vehicle.trip.route_id
-                                vehicle_data["trip_id"] = vehicle.trip.trip_id
-
-                            results.append(vehicle_data)
-
-            # Add feed source info to help with debugging
-            results.insert(0, {
-                "type": "info",
-                "message": f"Data from {len(feeds_to_use)} MTA feeds",
-                "feeds_used": [url.split('/')[-1] for url in feeds_to_use],
-                "total_entities": len(results)
-            })
-
-            # Cache the results in Redis for 60 seconds
-            # app.redis.setex('vehicles_data', 60, str(results))
-
-            # Ensure all data is JSON serializable before returning
-            return jsonify(results)
-
+            feed.ParseFromString(response.content)
+            return feed
         except Exception as e:
-            print(f"Error: {str(e)}")
-            return jsonify([{"error": str(e)}])
+            app.logger.error(f"Error parsing feed content: {e}")
+            # Log a sample of the content
+            app.logger.debug(f"Content sample: {response.content[:100]}")
+            return None
+    except Exception as e:
+        app.logger.error(f"Error fetching real-time data: {e}")
+        return None
 
-    # Shell context for flask cli
-    @app.shell_context_processor
-    def make_shell_context():
-        # Import all models here
-        from models import (
-            User, UserPreferences, SavedLocation,
-            FavoriteRoute, FavoriteStation, Alert,
-            Route, Stop, Trip, TripStop, ServiceAlert,
-            VehiclePosition, AccessibilityStatus,
-            StationStatus, RouteStatus, ServiceStatus,
-            SearchHistory, TripHistory
-        )
 
-        return {
-            'db': db,
-            'User': User,
-            'UserPreferences': UserPreferences,
-            'SavedLocation': SavedLocation,
-            'FavoriteRoute': FavoriteRoute,
-            'FavoriteStation': FavoriteStation,
-            'Alert': Alert,
-            'Route': Route,
-            'Stop': Stop,
-            'Trip': Trip,
-            'TripStop': TripStop,
-            'ServiceAlert': ServiceAlert,
-            'VehiclePosition': VehiclePosition,
-            'AccessibilityStatus': AccessibilityStatus,
-            'StationStatus': StationStatus,
-            'RouteStatus': RouteStatus,
-            'ServiceStatus': ServiceStatus,
-            'SearchHistory': SearchHistory,
-            'TripHistory': TripHistory
-        }
+def get_vehicle_positions(feed):
+    if not feed:
+        return []
 
-    @app.route("/api/stats")
-    def stats():
-        try:
-            from models import VehiclePosition, Trip, Route
+    # Count entity types for diagnostics
+    entity_counts = {'vehicle': 0, 'trip_update': 0, 'alert': 0, 'other': 0}
+    for entity in feed.entity:
+        if entity.HasField('vehicle'):
+            entity_counts['vehicle'] += 1
+        elif entity.HasField('trip_update'):
+            entity_counts['trip_update'] += 1
+        elif entity.HasField('alert'):
+            entity_counts['alert'] += 1
+        else:
+            entity_counts['other'] += 1
 
-            # Check if tables exist before querying
-            inspector = db.inspect(db.engine)
-            if not (inspector.has_table("vehicle_position") and
-                    inspector.has_table("trip") and
-                    inspector.has_table("route")):
-                return jsonify({
-                    "error": "Database tables do not exist yet. Please run initialization first.",
-                    "vehicle_positions": 0,
-                    "trips": 0,
-                    "routes": 0
-                })
+    app.logger.info(f"Entity counts: {entity_counts}")
 
-            vehicle_count = VehiclePosition.query.count()
-            trip_count = Trip.query.count()
-            route_count = Route.query.count()
+    # Rest of your function...
 
-            return jsonify({
-                "vehicle_positions": vehicle_count,
-                "trips": trip_count,
-                "routes": route_count
-            })
-        except Exception as e:
-            return jsonify({
-                "error": f"Database error: {str(e)}",
-                "vehicle_positions": 0,
-                "trips": 0,
-                "routes": 0
+    vehicles = []
+    timestamp = feed.header.timestamp
+
+    for entity in feed.entity:
+        if entity.HasField('vehicle'):
+            vehicle = entity.vehicle
+
+            # Skip if no position data
+            if not vehicle.HasField('position'):
+                continue
+
+            vehicles.append({
+                'trip_id': vehicle.trip.trip_id if vehicle.HasField('trip') else None,
+                'route_id': vehicle.trip.route_id if vehicle.HasField('trip') else None,
+                'lat': vehicle.position.latitude,
+                'lon': vehicle.position.longitude,
+                'bearing': vehicle.position.bearing if vehicle.position.HasField(
+                    'bearing') else None,
+                'status': vehicle.current_status,
+                'stop_id': vehicle.stop_id if vehicle.HasField('stop_id') else None,
+                'timestamp': timestamp
             })
 
-    @app.route("/api/routes")
-    def routes():
-        from models import Route
-        routes = Route.query.all()
-        routes_data = [{
-            "id": r.id,
-            "short_name": r.short_name,
-            "long_name": r.long_name,
-            "type": r.type,
-            "color": r.color,
-            "is_active": r.is_active
-        } for r in routes]
-
-        return jsonify(routes_data)
-
-    @app.route("/api/trip/<trip_id>")
-    def trip_details(trip_id):
-        from models import Trip, TripStop
-        trip = Trip.query.get_or_404(trip_id)
-        stops = TripStop.query.filter_by(trip_id=trip_id).order_by(TripStop.stop_sequence).all()
-
-        trip_data = {
-            "id": trip.id,
-            "route_id": trip.route_id,
-            "service_id": trip.service_id,
-            "direction_id": trip.direction_id,
-            "is_assigned": trip.is_assigned,
-            "stops": [{
-                "stop_id": stop.stop_id,
-                "arrival_time": stop.arrival_time.strftime('%H:%M:%S') if stop.arrival_time else None,
-                "departure_time": stop.departure_time.strftime('%H:%M:%S') if stop.departure_time else None,
-                "sequence": stop.stop_sequence
-            } for stop in stops]
-        }
-
-        return jsonify(trip_data)
-
-    return app
+    return vehicles
 
 
-def fetch_and_store_mta_data():
-    from models import db, Route, Trip, VehiclePosition, Stop, TripStop
+def save_vehicle_positions(vehicles):
+    """Save vehicle positions to database."""
+    if not vehicles:
+        return
 
-    print("Fetching and storing MTA data...")
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
     try:
-        # First, store basic route information
-        for route_id, feed_url in MTA_FEEDS.items():
-            # Check if route already exists
-            existing_route = Route.query.filter_by(id=route_id).first()
-            if not existing_route:
-                # Create simplified route names from MTA keys
-                route_name = route_id.replace('-', ' ').split(' ')[0]  # Just take the first part
+        cursor.execute('BEGIN TRANSACTION')
 
-                new_route = Route(
-                    id=route_id,
-                    short_name=route_name,
-                    long_name=f"MTA {route_name} Line",
-                    type=1,  # 1 = Subway
-                    color="000000",  # Default black
-                    is_active=True
+        # Clear old positions that are older than 10 minutes
+        ten_minutes_ago = int(time.time()) - 600
+        cursor.execute('DELETE FROM vehicle_positions WHERE timestamp < ?',
+                       (ten_minutes_ago,))
+
+        # Insert new positions
+        for vehicle in vehicles:
+            cursor.execute(
+                '''
+                INSERT INTO vehicle_positions 
+                (trip_id, route_id, latitude, longitude, bearing, current_status, stop_id, timestamp)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ''',
+                (
+                    vehicle['trip_id'],
+                    vehicle['route_id'],
+                    vehicle['lat'],
+                    vehicle['lon'],
+                    vehicle['bearing'],
+                    vehicle['status'],
+                    vehicle['stop_id'],
+                    vehicle['timestamp']
                 )
-                db.session.add(new_route)
+            )
 
-        # Commit route changes
-        db.session.commit()
-        print(f"Routes added/updated")
-
-        # Now fetch vehicle data
-        for route_id, feed_url in MTA_FEEDS.items():
-            headers = {}
-            response = requests.get(feed_url, headers=headers, timeout=10)
-            feed = gtfs_realtime_pb2.FeedMessage()
-            feed.ParseFromString(response.content)
-
-            for entity in feed.entity:
-                if entity.HasField("trip_update"):
-                    # Process trip info
-                    trip_update = entity.trip_update
-                    trip_id = trip_update.trip.trip_id
-
-                    # Check if trip exists
-                    existing_trip = Trip.query.filter_by(id=trip_id).first()
-                    if not existing_trip:
-                        new_trip = Trip(
-                            id=trip_id,
-                            route_id=trip_update.trip.route_id,
-                            service_id=trip_update.trip.start_date or "unknown",
-                            direction_id=False,  # Default
-                            is_assigned=True if hasattr(trip_update.trip, 'nyct_trip_descriptor') and
-                                                trip_update.trip.nyct_trip_descriptor.is_assigned else False
-                        )
-                        db.session.add(new_trip)
-
-                        # Process stop times for this trip
-                        for i, stu in enumerate(trip_update.stop_time_update):
-                            stop_id = stu.stop_id
-
-                            # Check if stop exists
-                            existing_stop = Stop.query.filter_by(id=stop_id).first()
-                            if not existing_stop:
-                                # Create a new stop with minimal info
-                                new_stop = Stop(
-                                    id=stop_id,
-                                    name=f"Stop {stop_id}",
-                                    latitude=0.0,  # Placeholder
-                                    longitude=0.0  # Placeholder
-                                )
-                                db.session.add(new_stop)
-
-                            # Create trip stop relationship
-                            arrival_time = None
-                            departure_time = None
-
-                            if stu.HasField("arrival") and stu.arrival.HasField("time"):
-                                arrival_time = datetime.fromtimestamp(stu.arrival.time)
-
-                            if stu.HasField("departure") and stu.departure.HasField("time"):
-                                departure_time = datetime.fromtimestamp(stu.departure.time)
-
-                            trip_stop = TripStop(
-                                trip_id=trip_id,
-                                stop_id=stop_id,
-                                stop_sequence=i,
-                                arrival_time=arrival_time,
-                                departure_time=departure_time
-                            )
-                            db.session.add(trip_stop)
-
-                if entity.HasField("vehicle"):
-                    vehicle = entity.vehicle
-                    if vehicle.HasField("trip") and vehicle.HasField("position"):
-                        vehicle_id = f"{vehicle.trip.trip_id}_{int(time.time())}"
-
-                        new_position = VehiclePosition(
-                            id=vehicle_id,
-                            trip_id=vehicle.trip.trip_id,
-                            timestamp=datetime.fromtimestamp(vehicle.timestamp),
-                            latitude=vehicle.position.latitude,
-                            longitude=vehicle.position.longitude,
-                            current_status=str(vehicle.current_status)
-                        )
-                        db.session.add(new_position)
-
-        # Commit all changes
-        db.session.commit()
-        print("Vehicle data stored successfully")
-
+        conn.commit()
     except Exception as e:
-        db.session.rollback()
-        print(f"Error storing MTA data: {str(e)}")
+        conn.rollback()
+        app.logger.error(f"Error saving vehicle positions: {e}")
+    finally:
+        conn.close()
 
 
-if __name__ == "__main__":
-    app = create_app()
-    with app.app_context():
-        db.create_all()
-        fetch_and_store_mta_data()
+@app.route('/')
+def index():
+    """Main page showing all train lines."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT route_id, route_short_name, route_long_name, route_color FROM routes')
+        routes = cursor.fetchall()
+
+        route_data = [{
+            'route_id': route['route_id'],
+            'route_short_name': route['route_short_name'] or route['route_id'],
+            'route_long_name': route['route_long_name'],
+            'route_color': route['route_color'] or 'FF0000'
+            # Default to red if no color
+        } for route in routes]
+    finally:
+        conn.close()
+
+    return render_template('index.html', routes=route_data)
+
+
+@app.route('/api/trains', methods=['GET'])
+def all_trains():
+    """API endpoint to get all trains currently in service."""
+    all_vehicles = []
+
+    for feed_id, feed_url in MTA_FEEDS.items():
+        feed = fetch_realtime_data(feed_url)
+        if feed:
+            vehicles = get_vehicle_positions(feed)
+            all_vehicles.extend(vehicles)
+
+            # Save vehicle positions to the database
+            save_vehicle_positions(vehicles)
+
+    return jsonify(all_vehicles)
+
+
+@app.route('/api/trains/<route_id>', methods=['GET'])
+def get_trains_by_route(route_id):
+    """API endpoint to get trains for a specific route."""
+    # Find the correct feed URL for this route
+    route_prefix = route_id[0].upper()  # Get first character
+    feed_id = ROUTE_TO_FEED.get(route_prefix)
+
+    if not feed_id:
+        return jsonify({"error": f"No feed found for route {route_id}"}), 404
+
+    feed_url = MTA_FEEDS.get(feed_id)
+    feed = fetch_realtime_data(feed_url)
+
+    if not feed:
+        return jsonify({"error": "Failed to fetch real-time data"}), 500
+
+    vehicles = get_vehicle_positions(feed)
+    app.logger.info(f"Total vehicles before filtering: {len(vehicles)}")
+
+    # Filter for the specific route_id
+    route_vehicles = [v for v in vehicles if
+                      v['route_id'] and v['route_id'].startswith(route_id)]
+
+    app.logger.info(f"Vehicles for route {route_id}: {len(route_vehicles)}")
+
+    # Get additional stop information
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        for vehicle in route_vehicles:
+            if vehicle['stop_id']:
+                cursor.execute('SELECT stop_name FROM stops WHERE stop_id = ?',
+                               (vehicle['stop_id'],))
+                stop = cursor.fetchone()
+                if stop:
+                    vehicle['stop_name'] = stop['stop_name']
+    finally:
+        conn.close()
+
+    # Save vehicle positions to the database
+    save_vehicle_positions(route_vehicles)
+
+    return jsonify(route_vehicles)
+
+
+@app.route('/train/<route_id>')
+def train_map(route_id):
+    """Page to display map for a specific train line."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+
+        # Get route info
+        cursor.execute('SELECT * FROM routes WHERE route_id = ?', (route_id,))
+        route = cursor.fetchone()
+
+        if not route:
+            return "Route not found", 404
+
+        route_data = {
+            'route_id': route['route_id'],
+            'route_short_name': route['route_short_name'] or route['route_id'],
+            'route_long_name': route['route_long_name'],
+            'route_color': route['route_color'] or "FF0000"
+            # Default to red if no color
+        }
+
+        # Get all stops for this route
+        cursor.execute('''
+            SELECT DISTINCT s.stop_id, s.stop_name, s.stop_lat, s.stop_lon
+            FROM stops s
+            JOIN stop_times st ON s.stop_id = st.stop_id
+            JOIN trips t ON st.trip_id = t.trip_id
+            WHERE t.route_id = ? AND s.location_type = 0
+        ''', (route_id,))
+
+        stops = [{
+            'stop_id': stop['stop_id'],
+            'stop_name': stop['stop_name'],
+            'lat': stop['stop_lat'],
+            'lon': stop['stop_lon']
+        } for stop in cursor.fetchall()]
+
+    finally:
+        conn.close()
+
+    return render_template('map.html', route=route_data, stops=json.dumps(stops))
+
+
+if __name__ == '__main__':
     app.run(debug=True)
