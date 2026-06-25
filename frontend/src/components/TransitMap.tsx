@@ -91,7 +91,7 @@ export function TransitMap({ stations, vehicles, alerts }: TransitMapProps) {
             key={station.stop_id}
             center={[station.lat, station.lon]}
             radius={3}
-            pathOptions={{ color: "#5c5b58", fillColor: "#5c5b58", fillOpacity: 0.8, weight: 0 }}
+            pathOptions={{ color: "#bdbcb6", fillColor: "#bdbcb6", fillOpacity: 0.85, weight: 0 }}
           >
             <Popup>
               <div className="station-popup">
