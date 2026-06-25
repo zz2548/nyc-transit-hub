@@ -1,7 +1,7 @@
 from flask import Blueprint, current_app, jsonify, request
 
 from app.extensions import db
-from app.models import IngestRun, RouteSegment, ServiceAlert, Station, VehicleSnapshot
+from app.models import IngestRun, RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot
 
 api_bp = Blueprint("api", __name__)
 
@@ -47,6 +47,16 @@ def list_route_segments() -> tuple:
     """
     segments = RouteSegment.query.all()
     return jsonify([s.to_dict() for s in segments])
+
+
+@api_bp.get("/route-shapes")
+def list_route_shapes() -> tuple:
+    """Full GTFS polyline geometry for every subway route, seeded from the
+    bundled shapes.txt. Each entry is one continuous polyline (shape_id) with
+    its ordered lat/lon points. Multiple polylines per route_id are normal.
+    """
+    shapes = RouteShape.query.all()
+    return jsonify([s.to_dict() for s in shapes])
 
 
 @api_bp.get("/stats/alerts-by-route")

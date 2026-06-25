@@ -5,7 +5,7 @@ import { DelayChart } from "./components/DelayChart";
 import { Header } from "./components/Header";
 import { TransitMap } from "./components/TransitMap";
 import { relativeTime } from "./lib/time";
-import type { AlertsByRoute, RouteSegment, ServiceAlert, Station, VehicleSnapshot } from "./types";
+import type { AlertsByRoute, RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot } from "./types";
 import "./App.css";
 
 const POLL_INTERVAL_MS = 30_000;
@@ -16,12 +16,14 @@ export default function App() {
   const [alerts, setAlerts] = useState<ServiceAlert[]>([]);
   const [alertsByRoute, setAlertsByRoute] = useState<AlertsByRoute[]>([]);
   const [segments, setSegments] = useState<RouteSegment[]>([]);
+  const [shapes, setShapes] = useState<RouteShape[]>([]);
   const [lastSyncIso, setLastSyncIso] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
 
-  // Stations are static reference data -- fetch once.
+  // Stations and route shapes are static reference data -- fetch once.
   useEffect(() => {
     api.stations().then(setStations).catch(() => undefined);
+    api.routeShapes().then(setShapes).catch(() => undefined);
   }, []);
 
   // Everything else is "right now" -- poll on an interval rather than
@@ -62,7 +64,7 @@ export default function App() {
       <Header isLive={isLive} lastSync={relativeTime(lastSyncIso)} vehicleCount={vehicles.length} />
 
       <main className="app-main">
-        <TransitMap stations={stations} vehicles={vehicles} alerts={alerts} segments={segments} />
+        <TransitMap stations={stations} vehicles={vehicles} alerts={alerts} segments={segments} shapes={shapes} />
 
         <aside className="app-sidebar">
           <AlertsPanel alerts={alerts} />

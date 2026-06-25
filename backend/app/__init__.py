@@ -32,9 +32,10 @@ def create_app(config_object: type[Config] = Config) -> Flask:
 
     with app.app_context():
         db.create_all()
-        from app.etl import seed_stations
+        from app.etl import seed_shapes, seed_stations
 
         seed_stations()
+        seed_shapes()
 
     if app.config["ENABLE_SCHEDULER"] and not scheduler.running:
         from app.etl import run_ingest

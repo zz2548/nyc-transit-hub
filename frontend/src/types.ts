@@ -35,6 +35,12 @@ export interface RouteSegment {
   b: { stop_id: string; lat: number; lon: number };
 }
 
+export interface RouteShape {
+  route_id: string;
+  shape_id: string;
+  points: [number, number][];
+}
+
 export interface AlertsByRoute {
   route: string;
   count: number;
