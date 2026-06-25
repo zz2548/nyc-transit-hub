@@ -1,8 +1,17 @@
 import L from "leaflet";
 import { useMemo } from "react";
-import { CircleMarker, MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import {
+  CircleMarker,
+  LayerGroup,
+  LayersControl,
+  MapContainer,
+  Marker,
+  Polyline,
+  Popup,
+  TileLayer,
+} from "react-leaflet";
 import { routeColorVar, routeTextColor } from "../lib/routeColors";
-import type { ServiceAlert, Station, VehicleSnapshot } from "../types";
+import type { RouteSegment, ServiceAlert, Station, VehicleSnapshot } from "../types";
 import { RouteBullet } from "./RouteBullet";
 
 const NYC_CENTER: [number, number] = [40.7128, -73.94];
@@ -11,6 +20,7 @@ interface TransitMapProps {
   stations: Station[];
   vehicles: VehicleSnapshot[];
   alerts: ServiceAlert[];
+  segments: RouteSegment[];
 }
 
 /** Multiple trains can be "at" the same station simultaneously (different
@@ -42,7 +52,7 @@ function vehicleIcon(routeId: string, hasDelay: boolean): L.DivIcon {
   });
 }
 
-export function TransitMap({ stations, vehicles, alerts }: TransitMapProps) {
+export function TransitMap({ stations, vehicles, alerts, segments }: TransitMapProps) {
   const vehiclesByStop = useMemo(() => {
     const map = new Map<string, VehicleSnapshot[]>();
     for (const vehicle of vehicles) {
@@ -81,70 +91,99 @@ export function TransitMap({ stations, vehicles, alerts }: TransitMapProps) {
         attribution="&copy; OpenStreetMap contributors &copy; CARTO"
       />
 
-      {stations.map((station) => {
-        const here = vehiclesByStop.get(station.stop_id) ?? [];
-        const routesHere = new Set(here.map((v) => v.route_id));
-        const stationAlerts = [...routesHere].flatMap((r) => alertsByRoute.get(r) ?? []);
+      <LayersControl position="topright">
+        <LayersControl.Overlay name="Lines" checked>
+          <LayerGroup>
+            {segments.map((segment) => (
+              <Polyline
+                key={`${segment.route_id}-${segment.a.stop_id}-${segment.b.stop_id}`}
+                positions={[
+                  [segment.a.lat, segment.a.lon],
+                  [segment.b.lat, segment.b.lon],
+                ]}
+                pathOptions={{
+                  color: routeColorVar(segment.route_id),
+                  weight: 2,
+                  opacity: 0.6,
+                }}
+              />
+            ))}
+          </LayerGroup>
+        </LayersControl.Overlay>
 
-        return (
-          <CircleMarker
-            key={station.stop_id}
-            center={[station.lat, station.lon]}
-            radius={3}
-            pathOptions={{ color: "#bdbcb6", fillColor: "#bdbcb6", fillOpacity: 0.85, weight: 0 }}
-          >
-            <Popup>
-              <div className="station-popup">
-                <strong>{station.name}</strong>
-                {here.length > 0 ? (
-                  <ul>
-                    {here.map((v) => (
-                      <li key={v.trip_id}>
-                        <RouteBullet routeId={v.route_id} size={16} /> {v.location_status?.replace(/_/g, " ").toLowerCase()}
-                        {v.direction ? ` · ${v.direction === "N" ? "northbound" : "southbound"}` : ""}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="station-popup__empty">No trains currently here</p>
-                )}
-                {stationAlerts.length > 0 && (
-                  <p className="station-popup__alert">⚠ {stationAlerts[0].header_text}</p>
-                )}
-              </div>
-            </Popup>
-          </CircleMarker>
-        );
-      })}
+        <LayersControl.Overlay name="Stations" checked>
+          <LayerGroup>
+            {stations.map((station) => {
+              const here = vehiclesByStop.get(station.stop_id) ?? [];
+              const routesHere = new Set(here.map((v) => v.route_id));
+              const stationAlerts = [...routesHere].flatMap((r) => alertsByRoute.get(r) ?? []);
 
-      {[...vehiclesByStop.entries()].flatMap(([, group]) =>
-        group.map((vehicle, index) => {
-          const station = stations.find((s) => s.stop_id === vehicle.stop_id);
-          if (!station) return null;
-          const [dx, dy] = offsetFor(vehicle.trip_id, index, group.length);
+              return (
+                <CircleMarker
+                  key={station.stop_id}
+                  center={[station.lat, station.lon]}
+                  radius={3}
+                  pathOptions={{ color: "#bdbcb6", fillColor: "#bdbcb6", fillOpacity: 0.85, weight: 0 }}
+                >
+                  <Popup>
+                    <div className="station-popup">
+                      <strong>{station.name}</strong>
+                      {here.length > 0 ? (
+                        <ul>
+                          {here.map((v) => (
+                            <li key={v.trip_id}>
+                              <RouteBullet routeId={v.route_id} size={16} /> {v.location_status?.replace(/_/g, " ").toLowerCase()}
+                              {v.direction ? ` · ${v.direction === "N" ? "northbound" : "southbound"}` : ""}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="station-popup__empty">No trains currently here</p>
+                      )}
+                      {stationAlerts.length > 0 && (
+                        <p className="station-popup__alert">⚠ {stationAlerts[0].header_text}</p>
+                      )}
+                    </div>
+                  </Popup>
+                </CircleMarker>
+              );
+            })}
+          </LayerGroup>
+        </LayersControl.Overlay>
 
-          return (
-            <Marker
-              key={vehicle.trip_id}
-              position={[station.lat + dy, station.lon + dx]}
-              icon={vehicleIcon(vehicle.route_id, vehicle.has_delay_alert)}
-            >
-              <Popup>
-                <div className="station-popup">
-                  <strong>
-                    {vehicle.route_id} train {vehicle.direction === "N" ? "northbound" : "southbound"}
-                  </strong>
-                  <p>To {vehicle.headsign ?? "unknown terminal"}</p>
-                  <p>
-                    {vehicle.location_status?.replace(/_/g, " ").toLowerCase()} {station.name}
-                  </p>
-                  {vehicle.has_delay_alert && <p className="station-popup__alert">⚠ Delay reported</p>}
-                </div>
-              </Popup>
-            </Marker>
-          );
-        }),
-      )}
+        <LayersControl.Overlay name="Trains" checked>
+          <LayerGroup>
+            {[...vehiclesByStop.entries()].flatMap(([, group]) =>
+              group.map((vehicle, index) => {
+                const station = stations.find((s) => s.stop_id === vehicle.stop_id);
+                if (!station) return null;
+                const [dx, dy] = offsetFor(vehicle.trip_id, index, group.length);
+
+                return (
+                  <Marker
+                    key={vehicle.trip_id}
+                    position={[station.lat + dy, station.lon + dx]}
+                    icon={vehicleIcon(vehicle.route_id, vehicle.has_delay_alert)}
+                  >
+                    <Popup>
+                      <div className="station-popup">
+                        <strong>
+                          {vehicle.route_id} train {vehicle.direction === "N" ? "northbound" : "southbound"}
+                        </strong>
+                        <p>To {vehicle.headsign ?? "unknown terminal"}</p>
+                        <p>
+                          {vehicle.location_status?.replace(/_/g, " ").toLowerCase()} {station.name}
+                        </p>
+                        {vehicle.has_delay_alert && <p className="station-popup__alert">⚠ Delay reported</p>}
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              }),
+            )}
+          </LayerGroup>
+        </LayersControl.Overlay>
+      </LayersControl>
     </MapContainer>
   );
 }

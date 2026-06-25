@@ -1,12 +1,22 @@
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
-from app.etl import _load_child_to_parent_map, resolve_parent_stop_id, trip_to_vehicle_record
+from app.etl import (
+    _load_child_to_parent_map,
+    resolve_parent_stop_id,
+    trip_to_segment_pairs,
+    trip_to_vehicle_record,
+)
 from app.mta_alerts import parse_alerts_feed_dict
 
 FIXTURES = Path(__file__).parent / "fixtures"
+
+
+@dataclass
+class FakeStopTimeUpdate:
+    stop_id: str
 
 
 @dataclass
@@ -25,6 +35,7 @@ class FakeTrip:
     location_status: str = "STOPPED_AT"
     has_delay_alert: bool = False
     last_position_update: datetime = datetime(2025, 3, 28, 12, 0, 0)
+    stop_time_updates: list[FakeStopTimeUpdate] = field(default_factory=list)
 
 
 def test_trip_to_vehicle_record_skips_trips_not_yet_underway():
@@ -80,3 +91,41 @@ def test_resolve_parent_stop_id_passes_through_unknown_or_parent_ids():
     assert resolve_parent_stop_id("228", child_to_parent) == "228"  # already a parent id
     assert resolve_parent_stop_id("not-a-real-stop", child_to_parent) == "not-a-real-stop"
     assert resolve_parent_stop_id(None, child_to_parent) is None
+
+
+def test_trip_to_segment_pairs_derives_consecutive_edges():
+    child_to_parent = _load_child_to_parent_map()
+    trip = FakeTrip(
+        underway=True,
+        route_id="5",
+        stop_time_updates=[
+            FakeStopTimeUpdate(stop_id="228N"),
+            FakeStopTimeUpdate(stop_id="137N"),
+            FakeStopTimeUpdate(stop_id="132N"),
+        ],
+    )
+
+    pairs = trip_to_segment_pairs(trip, child_to_parent)
+
+    # Each pair is (route_id, *sorted(stop_a, stop_b)) -- order-independent
+    # so the same physical edge from a southbound trip matches a northbound one.
+    assert ("5", "137", "228") in pairs
+    assert ("5", "132", "137") in pairs
+    assert len(pairs) == 2  # 3 stops -> 2 consecutive edges
+
+
+def test_trip_to_segment_pairs_skips_self_pairs_and_empty_sequences():
+    child_to_parent = _load_child_to_parent_map()
+
+    # A single-stop trip has no edges to form
+    lone_stop = FakeTrip(underway=True, stop_time_updates=[FakeStopTimeUpdate(stop_id="228N")])
+    assert trip_to_segment_pairs(lone_stop, child_to_parent) == []
+
+    # Consecutive updates resolving to the same parent station (e.g. a
+    # scheduled hold with separate arrival/departure rows) shouldn't
+    # produce a zero-length self-edge
+    same_station_twice = FakeTrip(
+        underway=True,
+        stop_time_updates=[FakeStopTimeUpdate(stop_id="228N"), FakeStopTimeUpdate(stop_id="228S")],
+    )
+    assert trip_to_segment_pairs(same_station_twice, child_to_parent) == []

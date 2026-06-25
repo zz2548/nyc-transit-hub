@@ -1,7 +1,7 @@
 from flask import Blueprint, current_app, jsonify, request
 
 from app.extensions import db
-from app.models import IngestRun, ServiceAlert, Station, VehicleSnapshot
+from app.models import IngestRun, RouteSegment, ServiceAlert, Station, VehicleSnapshot
 
 api_bp = Blueprint("api", __name__)
 
@@ -37,6 +37,16 @@ def list_vehicles() -> tuple:
 def list_alerts() -> tuple:
     alerts = ServiceAlert.query.order_by(ServiceAlert.starts_at.desc()).all()
     return jsonify([a.to_dict() for a in alerts])
+
+
+@api_bp.get("/route-segments")
+def list_route_segments() -> tuple:
+    """Line geometry for the map -- accumulated edges between adjacent
+    stations on each route, derived from real stop sequences (see
+    app/etl.py for why there's no static shapes.txt backing this).
+    """
+    segments = RouteSegment.query.all()
+    return jsonify([s.to_dict() for s in segments])
 
 
 @api_bp.get("/stats/alerts-by-route")

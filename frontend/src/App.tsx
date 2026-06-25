@@ -5,7 +5,7 @@ import { DelayChart } from "./components/DelayChart";
 import { Header } from "./components/Header";
 import { TransitMap } from "./components/TransitMap";
 import { relativeTime } from "./lib/time";
-import type { AlertsByRoute, ServiceAlert, Station, VehicleSnapshot } from "./types";
+import type { AlertsByRoute, RouteSegment, ServiceAlert, Station, VehicleSnapshot } from "./types";
 import "./App.css";
 
 const POLL_INTERVAL_MS = 30_000;
@@ -15,6 +15,7 @@ export default function App() {
   const [vehicles, setVehicles] = useState<VehicleSnapshot[]>([]);
   const [alerts, setAlerts] = useState<ServiceAlert[]>([]);
   const [alertsByRoute, setAlertsByRoute] = useState<AlertsByRoute[]>([]);
+  const [segments, setSegments] = useState<RouteSegment[]>([]);
   const [lastSyncIso, setLastSyncIso] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
 
@@ -30,15 +31,17 @@ export default function App() {
 
     const poll = async () => {
       try {
-        const [nextVehicles, nextAlerts, nextAlertsByRoute] = await Promise.all([
+        const [nextVehicles, nextAlerts, nextAlertsByRoute, nextSegments] = await Promise.all([
           api.vehicles(),
           api.alerts(),
           api.alertsByRoute(),
+          api.routeSegments(),
         ]);
         if (cancelled) return;
         setVehicles(nextVehicles);
         setAlerts(nextAlerts);
         setAlertsByRoute(nextAlertsByRoute);
+        setSegments(nextSegments);
         setLastSyncIso(new Date().toISOString());
         setIsLive(true);
       } catch {
@@ -59,7 +62,7 @@ export default function App() {
       <Header isLive={isLive} lastSync={relativeTime(lastSyncIso)} vehicleCount={vehicles.length} />
 
       <main className="app-main">
-        <TransitMap stations={stations} vehicles={vehicles} alerts={alerts} />
+        <TransitMap stations={stations} vehicles={vehicles} alerts={alerts} segments={segments} />
 
         <aside className="app-sidebar">
           <AlertsPanel alerts={alerts} />

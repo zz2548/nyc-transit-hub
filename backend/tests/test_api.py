@@ -5,7 +5,7 @@ import pytest
 from app import create_app
 from app.config import TestConfig
 from app.extensions import db
-from app.models import ServiceAlert, Station, VehicleSnapshot
+from app.models import ServiceAlert, Station, RouteSegment, VehicleSnapshot
 
 
 @pytest.fixture
@@ -15,7 +15,9 @@ def app():
         # one known real station id from the seeded data, plus a fake live
         # vehicle and alert on top of it
         station = Station.query.filter_by(name="Times Sq-42 St").first()
+        grand_central = Station.query.filter_by(name="Grand Central-42 St").first()
         assert station is not None
+        assert grand_central is not None
 
         db.session.add(
             VehicleSnapshot(
@@ -36,6 +38,9 @@ def app():
                 routes="5,6",
                 starts_at=datetime(2025, 3, 28, 11, 0, 0),
             )
+        )
+        db.session.add(
+            RouteSegment(route_id="7", stop_id_a=grand_central.stop_id, stop_id_b=station.stop_id)
         )
         db.session.commit()
 
@@ -85,6 +90,21 @@ def test_alerts_by_route_aggregation(client):
     body = client.get("/api/stats/alerts-by-route").get_json()
     assert {"route": "5", "count": 1} in body
     assert {"route": "6", "count": 1} in body
+
+
+def test_route_segments_endpoint_resolves_station_positions(client, app):
+    body = client.get("/api/route-segments").get_json()
+    assert len(body) == 1
+    segment = body[0]
+    assert segment["route_id"] == "7"
+
+    with app.app_context():
+        expected_ids = {
+            Station.query.filter_by(name="Times Sq-42 St").first().stop_id,
+            Station.query.filter_by(name="Grand Central-42 St").first().stop_id,
+        }
+    assert {segment["a"]["stop_id"], segment["b"]["stop_id"]} == expected_ids
+    assert segment["a"]["lat"] is not None and segment["b"]["lon"] is not None
 
 
 def test_manual_ingest_trigger_requires_secret_when_configured(client, app):

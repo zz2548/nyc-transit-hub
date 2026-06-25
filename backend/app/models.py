@@ -92,6 +92,36 @@ class ServiceAlert(db.Model):
         }
 
 
+class RouteSegment(db.Model):
+    """One edge between two adjacent stations on a route, used to draw the
+    colored line geometry on the map. There's no static `shapes.txt` in the
+    bundled GTFS data (only stops.txt and trips.txt), so these edges are
+    derived from real trips' observed stop sequences (see
+    etl.trip_to_segment_pairs) and accumulated across ingest cycles rather
+    than replaced each run -- a route's physical shape doesn't change
+    minute to minute, so there's no reason to forget edges between runs.
+    """
+
+    __tablename__ = "route_segments"
+    __table_args__ = (db.UniqueConstraint("route_id", "stop_id_a", "stop_id_b", name="uq_route_segment"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    route_id = db.Column(db.String(8), nullable=False, index=True)
+    stop_id_a = db.Column(db.String(16), db.ForeignKey("stations.stop_id"), nullable=False)
+    stop_id_b = db.Column(db.String(16), db.ForeignKey("stations.stop_id"), nullable=False)
+    first_seen_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    station_a = db.relationship("Station", foreign_keys=[stop_id_a])
+    station_b = db.relationship("Station", foreign_keys=[stop_id_b])
+
+    def to_dict(self) -> dict:
+        return {
+            "route_id": self.route_id,
+            "a": {"stop_id": self.station_a.stop_id, "lat": self.station_a.lat, "lon": self.station_a.lon},
+            "b": {"stop_id": self.station_b.stop_id, "lat": self.station_b.lat, "lon": self.station_b.lon},
+        }
+
+
 class IngestRun(db.Model):
     """Observability log for the ETL pipeline -- proof the background job is
     actually running, and a place to see failures without reading server logs.
@@ -104,6 +134,7 @@ class IngestRun(db.Model):
     finished_at = db.Column(db.DateTime)
     vehicle_count = db.Column(db.Integer, default=0)
     alert_count = db.Column(db.Integer, default=0)
+    new_segment_count = db.Column(db.Integer, default=0)
     status = db.Column(db.String(16), default="running")  # running / success / error
     error_message = db.Column(db.Text)
 
@@ -113,6 +144,7 @@ class IngestRun(db.Model):
             "finished_at": self.finished_at.isoformat() if self.finished_at else None,
             "vehicle_count": self.vehicle_count,
             "alert_count": self.alert_count,
+            "new_segment_count": self.new_segment_count,
             "status": self.status,
             "error_message": self.error_message,
         }

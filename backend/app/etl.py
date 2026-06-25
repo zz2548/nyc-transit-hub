@@ -25,7 +25,7 @@ from nyct_gtfs import NYCTFeed
 
 from app.extensions import db
 from app.mta_alerts import fetch_alerts_feed_dict, parse_alerts_feed_dict
-from app.models import IngestRun, ServiceAlert, Station, VehicleSnapshot
+from app.models import IngestRun, RouteSegment, ServiceAlert, Station, VehicleSnapshot
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +67,27 @@ def resolve_parent_stop_id(stop_id: str | None, child_to_parent: dict[str, str])
     if stop_id is None:
         return None
     return child_to_parent.get(stop_id, stop_id)
+
+
+def trip_to_segment_pairs(trip: Any, child_to_parent: dict[str, str]) -> list[tuple[str, str, str]]:
+    """Derive (route_id, station_a, station_b) edges from one trip's stop
+    sequence. There's no static `shapes.txt` bundled with nyct-gtfs (only
+    stops.txt and trips.txt), so route line geometry is built from real
+    operating data instead: each currently-scheduled trip's ordered stop
+    list is a real, observed path along that route. Aggregated across many
+    trips over several ingest cycles, the union of these edges converges on
+    the full route shape -- see _ingest_route_segments().
+
+    Pure function: takes any object exposing `.route_id` and
+    `.stop_time_updates` (each with `.stop_id`) -- see tests/test_etl.py.
+    """
+    stop_ids = [resolve_parent_stop_id(update.stop_id, child_to_parent) for update in trip.stop_time_updates]
+
+    pairs = []
+    for a, b in zip(stop_ids, stop_ids[1:]):
+        if a and b and a != b:
+            pairs.append((trip.route_id, *sorted((a, b))))
+    return pairs
 
 
 def seed_stations() -> int:
@@ -116,30 +137,61 @@ def trip_to_vehicle_record(trip: Any) -> dict[str, Any] | None:
     }
 
 
-def _ingest_vehicles() -> int:
-    known_stop_ids = {row[0] for row in db.session.query(Station.stop_id).all()}
-    child_to_parent = _load_child_to_parent_map()
-    records = []
-
+def _fetch_live_trips() -> list[Any]:
+    """Fetch all 8 NYCT feeds once and return a flat list of trips. Both
+    vehicle positions and route-segment geometry are derived from this same
+    fetch -- there's no reason to hit the MTA endpoint twice per cycle.
+    """
+    trips = []
     for group in FEED_GROUPS:
         try:
             feed = NYCTFeed(group)
         except Exception:  # network/parse errors on one feed shouldn't sink the run
             logger.exception("Failed to fetch feed group %s", group)
             continue
+        trips.extend(feed.trips)
+    return trips
 
-        for trip in feed.trips:
-            record = trip_to_vehicle_record(trip)
-            if not record:
-                continue
-            record["stop_id"] = resolve_parent_stop_id(record["stop_id"], child_to_parent)
-            if record["stop_id"] in known_stop_ids:
-                records.append(record)
+
+def _ingest_vehicles(trips: list[Any], child_to_parent: dict[str, str], known_stop_ids: set[str]) -> int:
+    records = []
+    for trip in trips:
+        record = trip_to_vehicle_record(trip)
+        if not record:
+            continue
+        record["stop_id"] = resolve_parent_stop_id(record["stop_id"], child_to_parent)
+        if record["stop_id"] in known_stop_ids:
+            records.append(record)
 
     VehicleSnapshot.query.delete()
     db.session.bulk_insert_mappings(VehicleSnapshot, records)
     db.session.commit()
     return len(records)
+
+
+def _ingest_route_segments(trips: list[Any], child_to_parent: dict[str, str], known_stop_ids: set[str]) -> int:
+    """Unlike vehicles, segments accumulate rather than reset each cycle --
+    a route's shape doesn't change minute to minute, so there's no reason
+    to forget an edge just because this particular cycle didn't see a trip
+    that crossed it. Over the first several cycles after a cold start, the
+    line layer fills in as more of each route's real stop patterns are
+    observed; see trip_to_segment_pairs() for why this approach exists at
+    all instead of reading a static shapes.txt.
+    """
+    existing = {(s.route_id, s.stop_id_a, s.stop_id_b) for s in RouteSegment.query.all()}
+    new_count = 0
+
+    for trip in trips:
+        for route_id, stop_a, stop_b in trip_to_segment_pairs(trip, child_to_parent):
+            key = (route_id, stop_a, stop_b)
+            if key in existing or stop_a not in known_stop_ids or stop_b not in known_stop_ids:
+                continue
+            existing.add(key)
+            db.session.add(RouteSegment(route_id=route_id, stop_id_a=stop_a, stop_id_b=stop_b))
+            new_count += 1
+
+    db.session.commit()
+    return new_count
 
 
 def _ingest_alerts() -> int:
@@ -171,7 +223,12 @@ def run_ingest() -> IngestRun:
     db.session.commit()
 
     try:
-        run.vehicle_count = _ingest_vehicles()
+        known_stop_ids = {row[0] for row in db.session.query(Station.stop_id).all()}
+        child_to_parent = _load_child_to_parent_map()
+        trips = _fetch_live_trips()
+
+        run.vehicle_count = _ingest_vehicles(trips, child_to_parent, known_stop_ids)
+        run.new_segment_count = _ingest_route_segments(trips, child_to_parent, known_stop_ids)
         run.alert_count = _ingest_alerts()
         run.status = "success"
     except Exception as exc:  # pragma: no cover - exercised via integration, not unit tests

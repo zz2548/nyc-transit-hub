@@ -29,6 +29,12 @@ export interface ServiceAlert {
   ends_at: string | null;
 }
 
+export interface RouteSegment {
+  route_id: string;
+  a: { stop_id: string; lat: number; lon: number };
+  b: { stop_id: string; lat: number; lon: number };
+}
+
 export interface AlertsByRoute {
   route: string;
   count: number;

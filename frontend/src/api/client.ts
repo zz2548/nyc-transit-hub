@@ -1,6 +1,7 @@
 import type {
   AlertsByRoute,
   HealthResponse,
+  RouteSegment,
   ServiceAlert,
   Station,
   VehicleSnapshot,
@@ -22,4 +23,5 @@ export const api = {
   vehicles: () => getJson<VehicleSnapshot[]>("/api/vehicles"),
   alerts: () => getJson<ServiceAlert[]>("/api/alerts"),
   alertsByRoute: () => getJson<AlertsByRoute[]>("/api/stats/alerts-by-route"),
+  routeSegments: () => getJson<RouteSegment[]>("/api/route-segments"),
 };

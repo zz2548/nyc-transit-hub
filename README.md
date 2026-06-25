@@ -8,9 +8,16 @@ A real-time web application that tracks every train currently running on the NYC
 
 - Polls all 8 NYCT subway realtime feeds (1-7/S, ACE, BDFM, G, JZ, NQRW, L, SIR) on a 30-second interval and persists a normalized snapshot to Postgres
 - Plots every in-service train on a live map, at its current/approaching station (the subway feed reports stop-level position, not GPS — see [Known limitations](#known-limitations))
+- Draws each route's line geometry on the map, color-coded by official MTA route family — toggleable independently from stations and trains (top-right map control)
 - Surfaces active service alerts in a departure-board-style panel
 - Charts active alerts by route with a D3 bar chart
 - Logs every ETL run (`/api/health`) so the pipeline's health is visible, not just inferred from the UI
+
+## Where the route lines come from
+
+There's no static `shapes.txt` in the data bundled with `nyct-gtfs` (only `stops.txt` and `trips.txt` — the actual geometric route shapes live in MTA's full static GTFS zip, which isn't fetchable without violating MTA's robots.txt). So instead of drawing pre-defined polylines, `app/etl.py` derives line geometry from real operating data: every currently-scheduled trip's ordered stop sequence is a genuine observed path along that route. Each ingest cycle extracts the consecutive-station pairs from every active trip and accumulates them into a `route_segments` table — unlike vehicles, these aren't wiped each cycle, since a route's physical shape doesn't change minute to minute.
+
+Practical effect: right after a fresh deploy, the line layer will be sparse and fill in over the first several ingest cycles as more trips contribute their stop sequences. Within a few minutes of normal operation it converges on a complete picture of every route currently running service.
 
 ## Architecture
 
@@ -113,5 +120,6 @@ This is set up to deploy as two independent services — a backend on **Render**
 ## Known limitations
 
 - **Train markers represent "current/approaching station," not GPS position.** NYCT's subway realtime feed doesn't publish vehicle coordinates between stations (unlike the bus feeds) — only the stop a train is at, approaching, or has just left. This is the same constraint every NYC subway tracker app works within; showing trains at their station is the standard, accurate approach.
+- **Route lines are derived from live trip data, not a static shapes file** (see "Where the route lines come from" above). They're real, but they're segment-by-segment straight lines between adjacent stations rather than geographically precise track curvature — fine for a schematic map (which is what the official MTA map is too), not survey-grade.
 - **A few transfer complexes (e.g. Times Sq-42 St) appear as two adjacent markers** instead of one merged station. MTA's static `stops.txt` doesn't merge physically-connected stations into a single complex at the file level — that requires a separate complex-ID crosswalk this project doesn't currently ingest.
 - **Single gunicorn worker by design** (see `backend/Dockerfile`) — the ETL scheduler runs in-process, so a second worker would double-ingest and race on the same writes. Fine at portfolio scale; a production version would split ingestion into its own worker process.
