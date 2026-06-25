@@ -13,7 +13,7 @@ services:
     volumes:
       - transit_hub_db:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U transit"]
+      test: ["CMD-SHELL", "pg_isready -U transit -d transit_hub"]
       interval: 5s
       timeout: 5s
       retries: 5
