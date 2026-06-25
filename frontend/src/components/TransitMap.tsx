@@ -72,17 +72,15 @@ interface TransitMapProps {
   onRouteClick: (routeId: string) => void;
 }
 
-function offsetFor(tripId: string, index: number, total: number): [number, number] {
+// Spread multiple vehicles at the same station along the track direction so
+// markers stay on the line. bearing is degrees clockwise from north.
+function offsetAlongTrack(bearing: number | null, index: number, total: number): [number, number] {
   if (total <= 1) return [0, 0];
-  const angle = (2 * Math.PI * index) / total + hashToUnit(tripId);
-  const radius = 0.00045;
-  return [Math.cos(angle) * radius, Math.sin(angle) * radius];
-}
-
-function hashToUnit(value: string): number {
-  let hash = 0;
-  for (let i = 0; i < value.length; i++) hash = (hash * 31 + value.charCodeAt(i)) % 1000;
-  return (hash / 1000) * Math.PI;
+  const b = ((bearing ?? 0) * Math.PI) / 180;
+  const step = 0.00018; // ~20 m along track
+  const t = index - (total - 1) / 2; // center the spread around the station
+  // [lat offset, lon offset] for a unit bearing vector
+  return [Math.cos(b) * t * step, Math.sin(b) * t * step];
 }
 
 function vehicleIcon(routeId: string, bearing: number | null, hasDelay: boolean): L.DivIcon {
@@ -275,7 +273,8 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
               group.map((vehicle, index) => {
                 const station = stations.find((s) => s.stop_id === vehicle.stop_id);
                 if (!station) return null;
-                const [dx, dy] = offsetFor(vehicle.trip_id, index, group.length);
+                const bearing = vehicleBearings.get(vehicle.trip_id) ?? null;
+                const [dy, dx] = offsetAlongTrack(bearing, index, group.length);
                 return (
                   <Marker
                     key={vehicle.trip_id}
