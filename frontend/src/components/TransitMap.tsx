@@ -1,4 +1,5 @@
 import L from "leaflet";
+import "leaflet-polylineoffset";
 import { useMemo } from "react";
 import {
   CircleMarker,
@@ -10,12 +11,19 @@ import {
   Popup,
   TileLayer,
 } from "react-leaflet";
-import { routeColorVar, routeTextColor } from "../lib/routeColors";
-import { bearingAtStation, offsetPolyline, routeOffsetMeters, shapePointsForVehicle } from "../lib/routeGeometry";
+import { routeColorHex, routeColorVar, routeTextColor } from "../lib/routeColors";
+import { bearingAtStation, routeOffsetSlot, shapePointsForVehicle } from "../lib/routeGeometry";
 import type { RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot } from "../types";
 import { RouteBullet } from "./RouteBullet";
 
 const NYC_CENTER: [number, number] = [40.7128, -73.94];
+const LINE_WEIGHT = 4; // px — offset slots are multiples of this
+
+// Cast to bypass TypeScript: leaflet-polylineoffset adds `offset` to L.Polyline options
+// and it flows through react-leaflet's constructor spread.
+const OffsetPolyline = Polyline as React.ComponentType<
+  React.ComponentProps<typeof Polyline> & { offset?: number }
+>;
 
 interface TransitMapProps {
   stations: Station[];
@@ -39,28 +47,19 @@ function hashToUnit(value: string): number {
   return (hash / 1000) * Math.PI;
 }
 
-/**
- * Build a vehicle marker icon.
- * `bearing` is the geographic heading in degrees (0=north, clockwise).
- * The arrow tip always points in the direction of travel; the circle stays
- * at the anchor point regardless of rotation.
- */
 function vehicleIcon(routeId: string, bearing: number | null, hasDelay: boolean): L.DivIcon {
   const bg = routeColorVar(routeId);
   const fg = routeTextColor(routeId);
-  const r = 11;       // circle radius px
-  const arrowH = 9;   // protrusion length px
-  const arrowW = 7;   // arrow base half-width px
-  // Canvas must contain circle + arrow in any direction → side = (r + arrowH) * 2
+  const r = 11;
+  const arrowH = 9;
+  const arrowW = 7;
   const side = (r + arrowH) * 2;
-  const c = side / 2; // centre of canvas = centre of circle
+  const c = side / 2;
 
   const delayRing = hasDelay
     ? `<circle cx="0" cy="0" r="${r + 3}" fill="none" stroke="var(--live)" stroke-width="2"/>`
     : "";
 
-  // Arrow points toward negative-y (up) in the SVG's local frame; rotation
-  // is applied as CSS on the svg element so the circle stays on the anchor.
   const arrowPoly = bearing !== null
     ? `<polygon points="0,${-(r + arrowH)} ${-arrowW},${-r + 3} ${arrowW},${-r + 3}" fill="${bg}"/>`
     : "";
@@ -81,7 +80,7 @@ function vehicleIcon(routeId: string, bearing: number | null, hasDelay: boolean)
     className: "vehicle-marker",
     html: svg,
     iconSize: [side, side],
-    iconAnchor: [c, c], // always the circle centre
+    iconAnchor: [c, c],
   });
 }
 
@@ -109,7 +108,6 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
     return map;
   }, [alerts]);
 
-  // Resolved shapes — prefer GTFS shapes, fall back to straight segments
   const resolvedShapes = useMemo(() => {
     if (shapes.length > 0) return shapes;
     return segments.map((s) => ({
@@ -119,7 +117,6 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
     }));
   }, [shapes, segments]);
 
-  // Per-vehicle geographic bearing derived from the GTFS shape at the vehicle's station
   const vehicleBearings = useMemo(() => {
     const map = new Map<string, number>();
     for (const v of vehicles) {
@@ -132,13 +129,6 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
     }
     return map;
   }, [vehicles, stations, shapes]);
-
-  const renderedLines = useMemo(() =>
-    resolvedShapes.map((shape) => {
-      const pts = offsetPolyline(shape.points, routeOffsetMeters(shape.route_id));
-      return { shape, pts };
-    }),
-  [resolvedShapes]);
 
   return (
     <MapContainer
@@ -158,13 +148,14 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
       <LayersControl position="topright">
         <LayersControl.Overlay name="Lines" checked>
           <LayerGroup>
-            {renderedLines.map(({ shape, pts }) => (
-              <Polyline
+            {resolvedShapes.map((shape) => (
+              <OffsetPolyline
                 key={shape.shape_id}
-                positions={pts}
+                positions={shape.points}
+                offset={routeOffsetSlot(shape.route_id) * LINE_WEIGHT}
                 pathOptions={{
-                  color: routeColorVar(shape.route_id),
-                  weight: 3.5,
+                  color: routeColorHex(shape.route_id),
+                  weight: LINE_WEIGHT,
                   opacity: 0.9,
                   lineCap: "round",
                   lineJoin: "round",
