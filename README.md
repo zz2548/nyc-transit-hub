@@ -1,320 +1,117 @@
 # NYC Transit Hub
 
-A real-time web application providing updates, schedules, and transit information for New York City's public transportation system.
+A real-time web application that tracks every train currently running on the NYC subway, surfaces active MTA service alerts, and visualizes delay patterns across lines — built on an actual ETL pipeline reading directly from the MTA's GTFS-realtime feeds, not a live passthrough.
 
-## Table of Contents
+**[Live demo →](#)** _(add your deployed URL here once live — see Deployment below)_
 
-- [Project Overview](#project-overview)
-- [Features](#features)
-- [Technologies](#technologies)
-- [Environment Setup](#environment-setup)
-  - [Prerequisites](#prerequisites)
-  - [Backend Setup](#backend-setup)
-  - [Frontend Setup](#frontend-setup)
-  - [Environment Variables](#environment-variables)
-  - [Database Setup](#database-setup)
-  - [API Keys](#api-keys)
-- [Development Workflow](#development-workflow)
-- [Project Structure](#project-structure)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [Troubleshooting](#troubleshooting)
+## What it does
 
-## Project Overview
+- Polls all 8 NYCT subway realtime feeds (1-7/S, ACE, BDFM, G, JZ, NQRW, L, SIR) on a 30-second interval and persists a normalized snapshot to Postgres
+- Plots every in-service train on a live map, at its current/approaching station (the subway feed reports stop-level position, not GPS — see [Known limitations](#known-limitations))
+- Surfaces active service alerts in a departure-board-style panel
+- Charts active alerts by route with a D3 bar chart
+- Logs every ETL run (`/api/health`) so the pipeline's health is visible, not just inferred from the UI
 
-NYC Transit Hub provides real-time transit information including subway and bus schedules, service alerts, and station accessibility information. This application integrates with the MTA API to deliver up-to-date information to commuters in NYC.
-
-## Features
-
-- Interactive transit map with route visualization
-- Real-time service status dashboard
-- User accounts with favorites and personalized alerts
-- Trip planning functionality
-- Elevator and escalator accessibility information
-- Multilingual support
-- Mobile-responsive design
-
-## Technologies
-
-### Frontend
--TBD
-
-### Backend
-- Python with Flask
-- SQLite with SQLAlchemy
-- Firebase Authentication
-
-### DevOps
-- Git and GitHub for version control
-- Vercel for deployment
-
-## Environment Setup
-
-### Prerequisites
-
-Before setting up the project, ensure you have the following installed:
-
-- [Node.js](https://nodejs.org/) (v16.0.0 or higher)
-- [npm](https://www.npmjs.com/) (v8.0.0 or higher) or [Yarn](https://yarnpkg.com/) (v1.22.0 or higher)
-- [Python](https://www.python.org/) (v3.9.0 or higher)
-- [pip](https://pip.pypa.io/en/stable/installation/) (latest version)
-- [Git](https://git-scm.com/downloads)
-
-### Backend Setup
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/nyc-transit-hub.git
-   cd nyc-transit-hub
-   ```
-
-2. Create and activate a Python virtual environment:
-   ```bash
-   # On Windows
-   python -m venv venv
-   venv\Scripts\activate
-
-   # On macOS/Linux
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-
-3. Install backend dependencies:
-   ```bash
-   cd backend
-   pip install .
-   
-   # For development dependencies
-   pip install ".[dev]"
-   ```
-
-4. Install protocol buffers for GTFS Realtime:
-   ```bash
-   pip install protobuf
-   pip install gtfs-realtime-bindings
-   ```
-
-5. Initialize the database:
-   ```bash
-   flask db init
-   flask db migrate -m "Initial migration"
-   flask db upgrade
-   ```
-
-6. Start the Flask development server:
-   ```bash
-   flask run
-   ```
-   The server should now be running at http://localhost:5000/
-
-### Frontend Setup
-
-1. Navigate to the frontend directory:
-   ```bash
-   cd ../frontend
-   ```
-
-2. Install frontend dependencies:
-   ```bash
-   # Using npm
-   npm install
-
-   # Using Yarn
-   yarn install
-   ```
-
-3. Start the React development server:
-   ```bash
-   # Using npm
-   npm start
-
-   # Using Yarn
-   yarn start
-   ```
-   The frontend should now be running at http://localhost:3000/
-
-### Environment Variables
-
-1. Create a `.env` file in the backend directory with the following variables:
-   ```
-   FLASK_APP=app.py
-   FLASK_ENV=development
-   SECRET_KEY=your_secret_key_here
-   MTA_API_KEY=your_mta_api_key_here
-   FIREBASE_CONFIG=path_to_firebase_credentials.json
-   ```
-
-2. Create a `.env` file in the frontend directory with the following variables:
-   ```
-   REACT_APP_API_URL=http://localhost:5000/api
-   REACT_APP_FIREBASE_API_KEY=your_firebase_api_key
-   REACT_APP_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
-   REACT_APP_FIREBASE_PROJECT_ID=your_firebase_project_id
-   REACT_APP_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
-   REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
-   REACT_APP_FIREBASE_APP_ID=your_firebase_app_id
-   ```
-
-### Database Setup
-
-The application uses SQLite for development. The database file will be created automatically when you initialize the database as described in the backend setup section.
-
-For production, you may want to use a more robust database like PostgreSQL. Configuration for different environments is located in `backend/config.py`.
-
-### API Keys
-
-1. **MTA API Key**:
-   - Register for an API key at [MTA Developer Portal](https://api.mta.info/)
-   - Add your key to the backend `.env` file
-
-2. **Firebase Project Setup**:
-   - Create a new Firebase project at [Firebase Console](https://console.firebase.google.com/)
-   - Set up Authentication with Email/Password provider
-   - Download your Firebase Admin SDK service account key (JSON) and save it securely
-   - Add the path to this file in your backend `.env` file
-   - Add the web app Firebase configuration to your frontend `.env` file
-
-## Development Workflow
-
-1. **Creating a new feature**:
-   ```bash
-   git checkout -b feature/your-feature-name
-   # Make your changes
-   git add .
-   git commit -m "Add your feature description"
-   git push origin feature/your-feature-name
-   ```
-
-2. **Running tests**:
-   ```bash
-   # Backend tests
-   cd backend
-   pytest
-
-   # Frontend tests
-   cd frontend
-   npm test
-   ```
-
-3. **Code linting**:
-   ```bash
-   # Backend
-   cd backend
-   flake8
-
-   # Frontend
-   cd frontend
-   npm run lint
-   ```
-
-## Project Structure
+## Architecture
 
 ```
-nyc-transit-hub/
-├── README.md
-├── backend/
-│   ├── app.py              # Flask application entry point
-│   ├── config.py           # Application configuration
-│   ├── requirements.txt    # Python dependencies
-│   ├── migrations/         # Database migrations
-│   ├── services/
-│   │   ├── mta_service.py  # MTA API integration
-│   │   └── auth_service.py # Authentication service
-│   ├── models/             # Database models
-│   └── routes/             # API routes
-├── frontend/
-│   ├── package.json        # JavaScript dependencies
-│   ├── public/             # Static files
-│   └── src/
-│       ├── components/     # React components
-│       ├── pages/          # Page components
-│       ├── store/          # Redux store
-│       ├── services/       # API services
-│       ├── utils/          # Utility functions
-│       ├── i18n/           # Translations
-│       ├── App.js          # Main app component
-│       └── index.js        # Entry point
-└── docs/                   # Documentation
+backend/                    Flask API + ETL pipeline
+  app/
+    etl.py                  The pipeline: seeds stations once, ingests live feeds on a schedule
+    mta_alerts.py            Service-alerts feed client (pure parser is unit tested)
+    models.py                SQLAlchemy models (Station, VehicleSnapshot, ServiceAlert, IngestRun)
+    routes.py                REST API
+    data/stops.txt           Official MTA static GTFS stop reference (lat/lon), via nyct-gtfs
+  tests/                     13 tests, no network required (see Testing below)
+
+frontend/                   React + TypeScript (Vite)
+  src/
+    components/TransitMap.tsx    Leaflet map
+    components/DelayChart.tsx    D3 bar chart
+    components/AlertsPanel.tsx   Service alerts list
+
+docker-compose.yml          One-command local stack (Postgres + backend)
+```
+
+**Stack:** Flask, SQLAlchemy, PostgreSQL, APScheduler, [nyct-gtfs](https://github.com/Andrew-Dickinson/nyct-gtfs) · React, TypeScript, Leaflet, D3.js · Docker
+
+## Why nyct-gtfs instead of hand-rolled protobuf parsing
+
+The NYCT subway feed is a GTFS-realtime feed with NYC-specific protocol extensions (track assignment, train IDs). `nyct-gtfs` is a well-maintained MIT-licensed library purpose-built for this feed, and it also bundles MTA's official static `stops.txt` (lat/lon for every station), which is what makes the map possible without a separate static-GTFS download step. The service-alerts feed isn't covered by that library, so `app/mta_alerts.py` parses it directly via the same compiled protobuf classes `nyct-gtfs` already provides (kept as a pure, unit-tested function — see `tests/test_etl.py`).
+
+## Local development
+
+```bash
+git clone https://github.com/zz2548/nyc-transit-hub.git
+cd nyc-transit-hub
+docker compose up --build
+```
+
+This starts Postgres and the backend together. The backend seeds the stations table on first boot and starts ingesting live data immediately (requires outbound internet access to `api-endpoint.mta.info`).
+
+Then, in a second terminal, run the frontend:
+
+```bash
+cd frontend
+cp .env.example .env   # VITE_API_BASE_URL defaults to http://localhost:8000
+npm install
+npm run dev
+```
+
+Open http://localhost:5173.
+
+### Running the backend without Docker
+
+```bash
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install .
+cp .env.example .env   # falls back to a local SQLite file if DATABASE_URL is unset
+python3 wsgi.py
 ```
 
 ## Testing
 
-### Backend Testing
-
-We use pytest for backend testing:
-
 ```bash
 cd backend
-pytest
+pip install '.[dev]'
+PYTHONPATH=. pytest tests/ -v
 ```
 
-### Frontend Testing
-
-We use Jest and React Testing Library for frontend tests:
+13 tests, all running against an in-memory SQLite DB and saved sample feed responses — no network or live MTA connection required. The ETL's pure transformation functions (`trip_to_vehicle_record`, `parse_alerts_feed_dict`) are unit tested directly; the parts that require a live network connection (the actual feed fetch) are exercised by deploying, not by the test suite.
 
 ```bash
 cd frontend
-npm test
+npm run build   # tsc -b && vite build — type-checks and builds
+npx oxlint
 ```
 
 ## Deployment
 
-### Deploying to Vercel
+This is set up to deploy as two independent services — a backend on **Render** and a frontend on **Vercel** — which is a normal, free-tier-friendly split for this kind of app.
 
-1. Install the Vercel CLI:
-   ```bash
-   npm install -g vercel
-   ```
+### Backend + database (Render)
 
-2. Deploy the frontend:
-   ```bash
-   cd frontend
-   vercel
-   ```
+1. Create a new **PostgreSQL** instance on Render (free tier is fine for a portfolio demo). Copy its internal connection string.
+2. Create a new **Web Service**, pointing at this repo's `backend/` directory, with the existing `Dockerfile`.
+3. Set environment variables:
+   - `DATABASE_URL` → the Postgres connection string from step 1
+   - `CORS_ORIGINS` → your Vercel frontend URL (set this after step 2 of the frontend deploy below)
+   - `ENABLE_SCHEDULER` → `true`
+   - `INGEST_INTERVAL_SECONDS` → `30`
+4. Deploy. Hit `https://<your-service>.onrender.com/api/health` — `last_ingest_run.status` should read `"success"` within a minute of boot.
 
-3. Deploy the backend as serverless functions:
-   ```bash
-   cd backend
-   vercel
-   ```
+> **Free-tier note:** Render's free web services spin down when idle and cold-start on the next request. The in-process scheduler only runs while the dyno is awake, so the very first request after a cold start may show slightly stale data until the next ingest cycle completes. For an always-warm demo, upgrade the web service to Render's paid "Starter" tier, or add a free uptime-ping service (e.g. UptimeRobot) hitting `/api/health` every few minutes to keep it warm.
 
-4. Link the frontend and backend in production by updating the API URL in the frontend environment variables.
+### Frontend (Vercel)
 
-## Troubleshooting
+1. Import this repo into Vercel, with **Root Directory** set to `frontend/`.
+2. Set the environment variable `VITE_API_BASE_URL` to your Render backend URL from above.
+3. Deploy. Vercel auto-detects the Vite build (`npm run build`, output `dist/`).
+4. Go back to Render and set `CORS_ORIGINS` to this Vercel URL, then redeploy the backend.
 
-### Common Issues
+## Known limitations
 
-1. **MTA API Connection Issues**:
-   - Check your API key is valid and not expired
-   - Ensure you're making requests to the correct endpoints
-   - Check MTA API status for any outages
-
-2. **Firebase Authentication Issues**:
-   - Verify Firebase configuration is correct
-   - Ensure Authentication providers are enabled in Firebase Console
-   - Check if the service account key has the right permissions
-
-3. **Database Migration Errors**:
-   - Try removing the migrations folder and recreate the migrations
-   ```bash
-   rm -rf migrations
-   flask db init
-   flask db migrate -m "Initial migration"
-   flask db upgrade
-   ```
-
-### Getting Help
-
-If you encounter any issues not covered in this documentation, please:
-
-1. Check the existing GitHub issues
-2. Create a new issue with detailed information about the problem
-3. Reach out to the project maintainers
-
-## Contributing
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- **Train markers represent "current/approaching station," not GPS position.** NYCT's subway realtime feed doesn't publish vehicle coordinates between stations (unlike the bus feeds) — only the stop a train is at, approaching, or has just left. This is the same constraint every NYC subway tracker app works within; showing trains at their station is the standard, accurate approach.
+- **A few transfer complexes (e.g. Times Sq-42 St) appear as two adjacent markers** instead of one merged station. MTA's static `stops.txt` doesn't merge physically-connected stations into a single complex at the file level — that requires a separate complex-ID crosswalk this project doesn't currently ingest.
+- **Single gunicorn worker by design** (see `backend/Dockerfile`) — the ETL scheduler runs in-process, so a second worker would double-ingest and race on the same writes. Fine at portfolio scale; a production version would split ingestion into its own worker process.

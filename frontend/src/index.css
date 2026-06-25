@@ -1,0 +1,86 @@
+/* ============================================================
+   Design tokens
+   Subject: the NYC subway system itself. The palette and type
+   pull from actual signage vernacular -- station ID boards,
+   platform indicator lights, and the eight official route-color
+   families -- rather than a generic dashboard look.
+   ============================================================ */
+:root {
+  /* Surfaces */
+  --bg: #0b0b0c;
+  --surface: #151517;
+  --surface-raised: #1c1c1f;
+  --border: #2a2a2e;
+
+  /* Text */
+  --text: #f2f1ec;
+  --text-dim: #8c8b86;
+  --text-faint: #5c5b58;
+
+  /* Signal accent -- reserved ONLY for "live" status, never decorative */
+  --live: #fccc0a;
+  --live-dim: #4a3f0a;
+
+  /* Official MTA route-color families */
+  --line-irt-red: #ee352e; /* 1 2 3 */
+  --line-irt-green: #00933c; /* 4 5 6 */
+  --line-irt-purple: #b933ad; /* 7 */
+  --line-shuttle-grey: #808183; /* S */
+  --line-ind-blue: #0039a6; /* A C E */
+  --line-ind-orange: #ff6319; /* B D F M */
+  --line-ind-lightgreen: #6cbe45; /* G */
+  --line-bmt-brown: #996633; /* J Z */
+  --line-bmt-yellow: #fccc0a; /* N Q R W */
+  --line-bmt-grey: #a7a9ac; /* L */
+  --line-sir-blue: #0078c6; /* SIR */
+
+  --radius: 3px;
+  --font-display: "Oswald", "Arial Narrow", sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--live);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
