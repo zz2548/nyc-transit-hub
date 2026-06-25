@@ -42,21 +42,32 @@ function hashToUnit(value: string): number {
 function vehicleIcon(routeId: string, direction: "N" | "S" | null, hasDelay: boolean): L.DivIcon {
   const bg = routeColorVar(routeId);
   const fg = routeTextColor(routeId);
-  // Arrow points up for N, down for S; omitted when direction unknown
-  const arrow =
+  const r = 11; // circle radius
+  const arrowH = 8; // how far the arrow protrudes
+  const totalH = direction ? r * 2 + arrowH : r * 2;
+  const cx = r;
+  // Arrow protrudes from top for N, bottom for S
+  const arrowSvg =
     direction === "N"
-      ? `<svg width="10" height="10" viewBox="0 0 10 10" style="display:block;margin:0 auto"><polygon points="5,1 9,9 5,7 1,9" fill="${fg}"/></svg>`
+      ? `<polygon points="${cx},0 ${cx - 5},${arrowH + 2} ${cx + 5},${arrowH + 2}" fill="${bg}"/>`
       : direction === "S"
-        ? `<svg width="10" height="10" viewBox="0 0 10 10" style="display:block;margin:0 auto;transform:rotate(180deg)"><polygon points="5,1 9,9 5,7 1,9" fill="${fg}"/></svg>`
+        ? `<polygon points="${cx},${totalH} ${cx - 5},${totalH - arrowH - 2} ${cx + 5},${totalH - arrowH - 2}" fill="${bg}"/>`
         : "";
+  const circleY = direction === "N" ? arrowH : 0;
+  const delayRing = hasDelay
+    ? `<circle cx="${cx}" cy="${circleY + r}" r="${r + 3}" fill="none" stroke="var(--live)" stroke-width="2" opacity="0.9"/>`
+    : "";
+  const svg = `<svg width="${r * 2}" height="${totalH}" viewBox="0 0 ${r * 2} ${totalH}" xmlns="http://www.w3.org/2000/svg">
+    ${arrowSvg}
+    ${delayRing}
+    <circle cx="${cx}" cy="${circleY + r}" r="${r}" fill="${bg}"/>
+    <text x="${cx}" y="${circleY + r + 4}" text-anchor="middle" font-family="Helvetica Neue,Arial,sans-serif" font-weight="700" font-size="11" fill="${fg}">${routeId}</text>
+  </svg>`;
   return L.divIcon({
     className: "vehicle-marker",
-    html: `<div class="vehicle-marker__inner${hasDelay ? " vehicle-marker__inner--delayed" : ""}" style="background:${bg};color:${fg}">
-      ${arrow}
-      <span class="vehicle-marker__label">${routeId}</span>
-    </div>`,
-    iconSize: [22, direction ? 32 : 22],
-    iconAnchor: [11, direction ? 16 : 11],
+    html: svg,
+    iconSize: [r * 2, totalH],
+    iconAnchor: [cx, direction === "N" ? arrowH + r : r],
   });
 }
 
