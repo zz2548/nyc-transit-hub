@@ -4,31 +4,29 @@ version = "0.1.0"
 description = "Backend for NYC Transit Hub - real-time transit information"
 requires-python = ">=3.9"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Jerry (Zixi) Zou", email = "zz2548@nyu.edu"}
 ]
 
 dependencies = [
-    "flask>=2.2.0",
-    "flask-sqlalchemy>=3.0.0",
-    "flask-migrate>=4.0.0",
-    "flask-cors>=3.0.10",
-    "flask-jwt-extended>=4.4.0",
-    "sqlalchemy>=1.4.0",
-    "werkzeug>=2.2.0",
-    "python-dotenv>=0.20.0",
-    "gunicorn>=20.1.0",
-    "requests>=2.28.0",
+    "flask>=3.0.0",
+    "flask-sqlalchemy>=3.1.0",
+    "flask-cors>=4.0.0",
+    "sqlalchemy>=2.0.0",
+    "werkzeug>=3.0.0",
+    "python-dotenv>=1.0.0",
+    "gunicorn>=21.2.0",
+    "requests>=2.31.0",
     "protobuf>=4.21.0",
-    "gtfs-realtime-bindings>=1.0.0",
-    "pytz>=2022.1",
-    "unidecode>=1.3.4",   # For text normalization in search
-    "firebase-admin>=6.0.0", # For authentication
-    "email-validator>=1.2.0", # For validating emails
+    "nyct-gtfs>=2.1.0",       # Typed access to NYCT's GTFS-realtime extensions, no API key needed
+    "apscheduler>=3.10.0",    # In-process scheduler that drives the ETL ingest loop
+    "psycopg2-binary>=2.9.9", # Postgres driver (falls back to SQLite locally via DATABASE_URL)
+    "pytz>=2023.3",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0.0"
+    "pytest>=7.0.0",
+    "pytest-cov>=4.1.0",
 ]
 
 
@@ -50,11 +48,9 @@ warn_unreachable = true
 [[tool.mypy.overrides]]
 module = [
     "flask_sqlalchemy.*",
-    "flask_migrate.*",
     "flask_cors.*",
-    "flask_jwt_extended.*",
     "gtfs_realtime_pb2",
-    "firebase_admin.*",
+    "nyct_gtfs.*",
 ]
 
 [tool.pytest.ini_options]
