@@ -3,6 +3,26 @@ const LAT_M = 111_000;
 const LON_M = 111_000 * Math.cos((40.7 * Math.PI) / 180);
 
 /**
+ * Map API route IDs that don't appear on the official MTA diagram to their
+ * canonical display names.
+ *   6X / 7X  — express variants, same line on the map
+ *   FX       — F express variant
+ *   GS / FS / H — the three S shuttles (42 St, Franklin Av, Rockaway Park)
+ */
+export const ROUTE_CANONICAL: Record<string, string> = {
+  "6X": "6",
+  "7X": "7",
+  "FX": "F",
+  "GS": "S",
+  "FS": "S",
+  "H":  "S",
+};
+
+export function canonicalRouteId(routeId: string): string {
+  return ROUTE_CANONICAL[routeId.toUpperCase()] ?? routeId.toUpperCase();
+}
+
+/**
  * Pixel offset slot per route. Half-integer values center even-count groups.
  * Multiply by LINE_WEIGHT (px) to get the final pixel offset for the plugin.
  *
@@ -13,19 +33,19 @@ const ROUTE_SLOTS: Record<string, number> = {
   // IRT 7th Ave / Broadway: 1 local, 2/3 express
   "1": -1, "2": 0, "3": 1,
   // IRT Lex Ave
-  "4": -1, "5": 0, "6": 1, "6X": 1,
-  // IRT Flushing
-  "7": -0.5, "7X": 0.5,
+  "4": -1, "5": 0, "6": 1,
+  // IRT Flushing (single merged line)
+  "7": 0,
   // IND 8th Ave
   "A": -1, "C": 0, "E": 1,
   // IND 6th Ave / Concourse (4 routes → half-integer slots)
-  "B": -1.5, "D": -0.5, "F": 0.5, "FX": 0.5, "M": 1.5,
+  "B": -1.5, "D": -0.5, "F": 0.5, "M": 1.5,
   // BMT Broadway (4 routes)
   "N": -1.5, "Q": -0.5, "R": 0.5, "W": 1.5,
   // BMT Nassau
   "J": -0.5, "Z": 0.5,
   // Singles
-  "L": 0, "G": 0, "SI": 0, "GS": 0, "FS": 0, "H": 0,
+  "L": 0, "G": 0, "SIR": 0, "S": 0,
 };
 
 /** Pixel offset slot for a route (multiply by line weight to get px offset). */
