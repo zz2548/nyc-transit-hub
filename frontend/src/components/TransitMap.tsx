@@ -10,8 +10,8 @@ import {
   Popup,
   TileLayer,
 } from "react-leaflet";
-import { routeColorVar, routeColorHex, routeTextColor } from "../lib/routeColors";
-import { offsetPolyline, routeOffsetMeters, samplePolylineAt } from "../lib/routeGeometry";
+import { routeColorVar, routeTextColor } from "../lib/routeColors";
+import { offsetPolyline, routeOffsetMeters } from "../lib/routeGeometry";
 import type { RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot } from "../types";
 import { RouteBullet } from "./RouteBullet";
 
@@ -39,26 +39,24 @@ function hashToUnit(value: string): number {
   return (hash / 1000) * Math.PI;
 }
 
-function vehicleIcon(routeId: string, hasDelay: boolean): L.DivIcon {
+function vehicleIcon(routeId: string, direction: "N" | "S" | null, hasDelay: boolean): L.DivIcon {
   const bg = routeColorVar(routeId);
   const fg = routeTextColor(routeId);
+  // Arrow points up for N, down for S; omitted when direction unknown
+  const arrow =
+    direction === "N"
+      ? `<svg width="10" height="10" viewBox="0 0 10 10" style="display:block;margin:0 auto"><polygon points="5,1 9,9 5,7 1,9" fill="${fg}"/></svg>`
+      : direction === "S"
+        ? `<svg width="10" height="10" viewBox="0 0 10 10" style="display:block;margin:0 auto;transform:rotate(180deg)"><polygon points="5,1 9,9 5,7 1,9" fill="${fg}"/></svg>`
+        : "";
   return L.divIcon({
     className: "vehicle-marker",
-    html: `<span class="vehicle-marker__bullet${hasDelay ? " vehicle-marker__bullet--delayed" : ""}" style="background:${bg};color:${fg}">${routeId}</span>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10],
-  });
-}
-
-function arrowIcon(bearing: number, color: string): L.DivIcon {
-  return L.divIcon({
-    className: "",
-    html: `<svg width="14" height="14" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg"
-      style="transform:rotate(${bearing}deg);transform-origin:50% 50%">
-      <polygon points="7,1 12,13 7,10 2,13" fill="${color}" opacity="0.9"/>
-    </svg>`,
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
+    html: `<div class="vehicle-marker__inner${hasDelay ? " vehicle-marker__inner--delayed" : ""}" style="background:${bg};color:${fg}">
+      ${arrow}
+      <span class="vehicle-marker__label">${routeId}</span>
+    </div>`,
+    iconSize: [22, direction ? 32 : 22],
+    iconAnchor: [11, direction ? 16 : 11],
   });
 }
 
@@ -96,14 +94,10 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
     }));
   }, [shapes, segments]);
 
-  // Offset polylines and arrow sample points
   const renderedLines = useMemo(() =>
     resolvedShapes.map((shape) => {
-      const offsetM = routeOffsetMeters(shape.route_id);
-      const pts = offsetPolyline(shape.points, offsetM);
-      // Sample arrow at 40% along the shape
-      const arrow = samplePolylineAt(pts, 0.4);
-      return { shape, pts, arrow };
+      const pts = offsetPolyline(shape.points, routeOffsetMeters(shape.route_id));
+      return { shape, pts };
     }),
   [resolvedShapes]);
 
@@ -137,19 +131,6 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
                   lineJoin: "round",
                 }}
                 eventHandlers={{ click: () => onRouteClick(shape.route_id) }}
-              />
-            ))}
-          </LayerGroup>
-        </LayersControl.Overlay>
-
-        <LayersControl.Overlay name="Direction arrows" checked>
-          <LayerGroup>
-            {renderedLines.map(({ shape, arrow }) => (
-              <Marker
-                key={`arrow-${shape.shape_id}`}
-                position={arrow.point}
-                icon={arrowIcon(arrow.bearing, routeColorHex(shape.route_id))}
-                interactive={false}
               />
             ))}
           </LayerGroup>
@@ -207,7 +188,7 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
                   <Marker
                     key={vehicle.trip_id}
                     position={[station.lat + dy, station.lon + dx]}
-                    icon={vehicleIcon(vehicle.route_id, vehicle.has_delay_alert)}
+                    icon={vehicleIcon(vehicle.route_id, vehicle.direction, vehicle.has_delay_alert)}
                   >
                     <Popup>
                       <div className="station-popup">
