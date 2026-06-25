@@ -1,7 +1,62 @@
+import csv
+import json
+import math
+import os
+
 from flask import Blueprint, current_app, jsonify, request
 
 from app.extensions import db
 from app.models import IngestRun, RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot
+
+_DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+
+# shape_id -> (direction_id, headsign), built once on first use
+_shape_dir_cache: dict[str, tuple[int, str]] | None = None
+
+
+def _shape_directions() -> dict[str, tuple[int, str]]:
+    global _shape_dir_cache
+    if _shape_dir_cache is not None:
+        return _shape_dir_cache
+    result: dict[str, tuple[int, str]] = {}
+    with open(os.path.join(_DATA_DIR, "trips.txt"), newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            sid = row.get("shape_id", "").strip()
+            if sid and sid not in result:
+                try:
+                    did = int(row.get("direction_id", 0))
+                except ValueError:
+                    did = 0
+                result[sid] = (did, row.get("trip_headsign", "").strip())
+    _shape_dir_cache = result
+    return result
+
+
+def _project_onto_polyline(lat: float, lon: float, points: list) -> float:
+    """Return cumulative arc-length parameter [0..1] of the nearest point
+    on the polyline to (lat, lon), using a flat-earth approximation at NYC.
+    """
+    SLAT = 111_000.0
+    SLON = 111_000.0 * math.cos(math.radians(40.7))
+    px, py = lon * SLON, lat * SLAT
+    cum = 0.0
+    best_t = 0.0
+    best_d = float("inf")
+    total = 0.0
+    for i in range(len(points) - 1):
+        ax, ay = points[i][1] * SLON, points[i][0] * SLAT
+        bx, by = points[i + 1][1] * SLON, points[i + 1][0] * SLAT
+        seg = math.hypot(bx - ax, by - ay)
+        if seg < 1e-6:
+            continue
+        t = max(0.0, min(1.0, ((px - ax) * (bx - ax) + (py - ay) * (by - ay)) / seg**2))
+        d = math.hypot(px - (ax + t * (bx - ax)), py - (ay + t * (by - ay)))
+        if d < best_d:
+            best_d = d
+            best_t = cum + t * seg
+        cum += seg
+    total = cum
+    return best_t / total if total > 0 else 0.0
 
 api_bp = Blueprint("api", __name__)
 
@@ -57,6 +112,78 @@ def list_route_shapes() -> tuple:
     """
     shapes = RouteShape.query.all()
     return jsonify([s.to_dict() for s in shapes])
+
+
+@api_bp.get("/routes/<route_id>/stops")
+def route_stops(route_id: str) -> tuple:
+    """Ordered stop list per direction for a route, derived by projecting each
+    station onto the route's GTFS shape polyline and sorting by arc-length.
+    Also includes current vehicle positions.
+    """
+    rid = route_id.upper()
+
+    segments = RouteSegment.query.filter_by(route_id=rid).all()
+    if not segments:
+        return jsonify({"error": "route not found"}), 404
+
+    stop_ids = {seg.stop_id_a for seg in segments} | {seg.stop_id_b for seg in segments}
+    stations = {s.stop_id: s for s in Station.query.filter(Station.stop_id.in_(stop_ids)).all()}
+
+    shapes = RouteShape.query.filter_by(route_id=rid).all()
+    shape_dirs = _shape_directions()
+
+    # Pick one representative shape per direction_id (longest shape wins)
+    best: dict[int, tuple[int, str, list]] = {}  # dir_id -> (point_count, headsign, points)
+    for shape in shapes:
+        did, headsign = shape_dirs.get(shape.shape_id, (0, ""))
+        pts = json.loads(shape.points_json)
+        prev = best.get(did)
+        if prev is None or len(pts) > prev[0]:
+            best[did] = (len(pts), headsign, pts)
+
+    # Current vehicles by stop
+    vehicles = VehicleSnapshot.query.filter_by(route_id=rid).all()
+    vehicles_by_stop: dict[str, list] = {}
+    for v in vehicles:
+        if v.stop_id:
+            vehicles_by_stop.setdefault(v.stop_id, []).append(v.to_dict())
+
+    directions = []
+    for did in sorted(best):
+        _, headsign, pts = best[did]
+        # Project every station onto this shape and sort by arc-length
+        params = [(
+            _project_onto_polyline(st.lat, st.lon, pts),
+            sid,
+        ) for sid, st in stations.items()]
+        params.sort()
+
+        # Deduplicate stops that project to nearly the same position
+        filtered: list[tuple[float, str]] = []
+        prev_t = -1.0
+        for t, sid in params:
+            if t - prev_t > 0.004:
+                filtered.append((t, sid))
+                prev_t = t
+
+        stops = []
+        for _, sid in filtered:
+            st = stations[sid]
+            stops.append({
+                "stop_id": sid,
+                "name": st.name,
+                "lat": st.lat,
+                "lon": st.lon,
+                "vehicles": vehicles_by_stop.get(sid, []),
+            })
+
+        directions.append({
+            "direction_id": did,
+            "headsign": headsign,
+            "stops": stops,
+        })
+
+    return jsonify({"route_id": rid, "directions": directions})
 
 
 @api_bp.get("/stats/alerts-by-route")
