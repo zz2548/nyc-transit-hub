@@ -3,62 +3,34 @@ const LAT_M = 111_000;
 const LON_M = 111_000 * Math.cos((40.7 * Math.PI) / 180);
 
 /**
- * Pixel offset slots per route. Routes that share a physical corridor get
- * sequential slots so they render as side-by-side stripes rather than stacking.
- * Positive = right-hand side when traveling in the shape's forward direction.
+ * Pixel offset slot per route. Half-integer values center even-count groups.
+ * Multiply by LINE_WEIGHT (px) to get the final pixel offset for the plugin.
+ *
+ * Groups are chosen so adjacent slots differ by 1, giving touching lines with
+ * no gap when rendered at LINE_WEIGHT px per route.
  */
 const ROUTE_SLOTS: Record<string, number> = {
   // IRT 7th Ave / Broadway: 1 local, 2/3 express
-  "1": -2, "2": 0, "3": 2,
-  // IRT Lex Ave: 4/5 express, 6 local
-  "4": -2, "5": 0, "6": 2, "6X": 2,
+  "1": -1, "2": 0, "3": 1,
+  // IRT Lex Ave
+  "4": -1, "5": 0, "6": 1, "6X": 1,
   // IRT Flushing
-  "7": -1, "7X": 1,
+  "7": -0.5, "7X": 0.5,
   // IND 8th Ave
-  "A": -2, "C": 0, "E": 2,
-  // IND 6th Ave / Concourse
-  "B": -3, "D": -1, "F": 1, "FX": 1, "M": 3,
-  // BMT Broadway
-  "N": -3, "Q": -1, "R": 1, "W": 3,
+  "A": -1, "C": 0, "E": 1,
+  // IND 6th Ave / Concourse (4 routes → half-integer slots)
+  "B": -1.5, "D": -0.5, "F": 0.5, "FX": 0.5, "M": 1.5,
+  // BMT Broadway (4 routes)
+  "N": -1.5, "Q": -0.5, "R": 0.5, "W": 1.5,
   // BMT Nassau
-  "J": -1, "Z": 1,
-  // Singles — no offset needed
+  "J": -0.5, "Z": 0.5,
+  // Singles
   "L": 0, "G": 0, "SI": 0, "GS": 0, "FS": 0, "H": 0,
 };
 
-const SLOT_METERS = 6;
-
-/** Meters to offset this route perpendicular to its direction of travel. */
-export function routeOffsetMeters(routeId: string): number {
-  const slot = ROUTE_SLOTS[routeId.toUpperCase()] ?? 0;
-  return slot * SLOT_METERS;
-}
-
-/**
- * Shift every point of a polyline perpendicularly by `offsetMeters`.
- * Positive = left when travelling forward (i.e. CCW rotation of the tangent).
- */
-export function offsetPolyline(
-  points: [number, number][],
-  offsetMeters: number,
-): [number, number][] {
-  if (offsetMeters === 0 || points.length < 2) return points;
-
-  return points.map((pt, i) => {
-    const prev = points[Math.max(0, i - 1)];
-    const next = points[Math.min(points.length - 1, i + 1)];
-
-    // Tangent vector in metres
-    const dlat = (next[0] - prev[0]) * LAT_M;
-    const dlon = (next[1] - prev[1]) * LON_M;
-    const len = Math.hypot(dlat, dlon);
-    if (len < 0.001) return pt;
-
-    // Perpendicular (CCW 90°): (-dlon, dlat)
-    const perpLat = (-dlon / len) * (offsetMeters / LAT_M);
-    const perpLon = (dlat / len) * (offsetMeters / LON_M);
-    return [pt[0] + perpLat, pt[1] + perpLon] as [number, number];
-  });
+/** Pixel offset slot for a route (multiply by line weight to get px offset). */
+export function routeOffsetSlot(routeId: string): number {
+  return ROUTE_SLOTS[routeId.toUpperCase()] ?? 0;
 }
 
 /**
