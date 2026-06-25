@@ -430,28 +430,9 @@
   margin: 8px 0 0;
 }
 
-.vehicle-marker__inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 22px;
-  padding: 3px 5px;
-  border-radius: 6px;
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 11px;
-  border: 2px solid var(--bg);
-  gap: 1px;
-  line-height: 1;
-}
-
-.vehicle-marker__inner--delayed {
-  box-shadow: 0 0 0 2px var(--live);
-}
-
-.vehicle-marker__label {
-  display: block;
+.vehicle-marker {
+  background: none !important;
+  border: none !important;
 }
 
 /* ---------- Layers control (overrides Leaflet defaults) ---------- */
