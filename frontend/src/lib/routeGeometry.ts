@@ -29,19 +29,22 @@ export function canonicalRouteId(routeId: string): string {
  * Groups are chosen so adjacent slots differ by 1, giving touching lines with
  * no gap when rendered at LINE_WEIGHT px per route.
  */
+// IND 6th Ave (B/D/F/M) and BMT Broadway (N/Q/R/W) share corridors in Queens
+// and Brooklyn. Assigning the same half-integer slots to both families causes
+// their lines to render on top of each other. Give all eight a globally unique
+// slot so they spread out correctly on shared segments.
 const ROUTE_SLOTS: Record<string, number> = {
-  // IRT 7th Ave / Broadway: 1 local, 2/3 express
+  // IRT 7th Ave / Broadway
   "1": -1, "2": 0, "3": 1,
   // IRT Lex Ave
   "4": -1, "5": 0, "6": 1,
-  // IRT Flushing (single merged line)
+  // IRT Flushing (merged — single line)
   "7": 0,
   // IND 8th Ave
   "A": -1, "C": 0, "E": 1,
-  // IND 6th Ave / Concourse (4 routes → half-integer slots)
-  "B": -1.5, "D": -0.5, "F": 0.5, "M": 1.5,
-  // BMT Broadway (4 routes)
-  "N": -1.5, "Q": -0.5, "R": 0.5, "W": 1.5,
+  // IND 6th Ave + BMT Broadway combined (8 unique slots, -3.5 → +3.5)
+  "B": -3.5, "D": -2.5, "F": -1.5, "M": -0.5,
+  "N":  0.5, "Q":  1.5, "R":  2.5, "W":  3.5,
   // BMT Nassau
   "J": -0.5, "Z": 0.5,
   // Singles

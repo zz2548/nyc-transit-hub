@@ -17,7 +17,7 @@ import type { RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot }
 import { RouteBullet } from "./RouteBullet";
 
 const NYC_CENTER: [number, number] = [40.7128, -73.94];
-const LINE_WEIGHT = 4;
+const LINE_WEIGHT = 3;
 
 const OffsetPolyline = Polyline as React.ComponentType<
   React.ComponentProps<typeof Polyline> & { offset?: number }
