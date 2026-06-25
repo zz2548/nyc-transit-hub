@@ -241,6 +241,17 @@
 .route-panel__dir-tab:hover { color: var(--text); }
 .route-panel__dir-tab--active { color: var(--text); font-weight: 600; }
 
+.route-panel__legend {
+  display: flex;
+  gap: 12px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
 .route-panel__direction {
   flex: 1;
   overflow-y: auto;
