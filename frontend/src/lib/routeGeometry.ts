@@ -152,10 +152,6 @@ function rdpSimplify(pts: [number, number][], eps: number): [number, number][] {
  *     preserving the overall route geometry.
  *  2. Drop near-U-turn vertices (> 150°) — eliminates remaining miter spikes
  *     from near-180° direction reversals.
- *  3. Truncate backtracking tails — if the polyline's straight-line distance
- *     from the start begins falling well below the maximum reached, the GTFS
- *     shape has looped back (terminal wye/loop track). Keep only the prefix
- *     up to the furthest point.
  */
 export function preprocessShape(points: [number, number][]): [number, number][] {
   if (points.length < 2) return points;
@@ -176,22 +172,6 @@ export function preprocessShape(points: [number, number][]): [number, number][] 
     if (turn < 150) noUturn.push(simplified[i]);
   }
   noUturn.push(simplified[simplified.length - 1]);
-
-  // Pass 3 – truncate backtracking tails (terminal loops).
-  // Find the point furthest from the start. If the endpoint is substantially
-  // closer to the start than that maximum (ratio < 0.55), the shape loops
-  // back; keep only up to the furthest point.
-  const [s0, s1] = noUturn[0];
-  let maxDist = 0, maxIdx = 0;
-  for (let i = 0; i < noUturn.length; i++) {
-    const d = Math.hypot(noUturn[i][0] - s0, noUturn[i][1] - s1);
-    if (d > maxDist) { maxDist = d; maxIdx = i; }
-  }
-  const endDist = Math.hypot(noUturn[noUturn.length - 1][0] - s0,
-                              noUturn[noUturn.length - 1][1] - s1);
-  if (maxIdx < noUturn.length - 5 && maxDist > 0 && endDist / maxDist < 0.55) {
-    return noUturn.slice(0, maxIdx + 1);
-  }
   return noUturn;
 }
 
