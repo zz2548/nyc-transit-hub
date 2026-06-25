@@ -11,7 +11,7 @@ import {
   TileLayer,
 } from "react-leaflet";
 import { routeColorVar, routeTextColor } from "../lib/routeColors";
-import { offsetPolyline, routeOffsetMeters } from "../lib/routeGeometry";
+import { bearingAtStation, offsetPolyline, routeOffsetMeters, shapePointsForVehicle } from "../lib/routeGeometry";
 import type { RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot } from "../types";
 import { RouteBullet } from "./RouteBullet";
 
@@ -39,35 +39,49 @@ function hashToUnit(value: string): number {
   return (hash / 1000) * Math.PI;
 }
 
-function vehicleIcon(routeId: string, direction: "N" | "S" | null, hasDelay: boolean): L.DivIcon {
+/**
+ * Build a vehicle marker icon.
+ * `bearing` is the geographic heading in degrees (0=north, clockwise).
+ * The arrow tip always points in the direction of travel; the circle stays
+ * at the anchor point regardless of rotation.
+ */
+function vehicleIcon(routeId: string, bearing: number | null, hasDelay: boolean): L.DivIcon {
   const bg = routeColorVar(routeId);
   const fg = routeTextColor(routeId);
-  const r = 11; // circle radius
-  const arrowH = 8; // how far the arrow protrudes
-  const totalH = direction ? r * 2 + arrowH : r * 2;
-  const cx = r;
-  // Arrow protrudes from top for N, bottom for S
-  const arrowSvg =
-    direction === "N"
-      ? `<polygon points="${cx},0 ${cx - 5},${arrowH + 2} ${cx + 5},${arrowH + 2}" fill="${bg}"/>`
-      : direction === "S"
-        ? `<polygon points="${cx},${totalH} ${cx - 5},${totalH - arrowH - 2} ${cx + 5},${totalH - arrowH - 2}" fill="${bg}"/>`
-        : "";
-  const circleY = direction === "N" ? arrowH : 0;
+  const r = 11;       // circle radius px
+  const arrowH = 9;   // protrusion length px
+  const arrowW = 7;   // arrow base half-width px
+  // Canvas must contain circle + arrow in any direction → side = (r + arrowH) * 2
+  const side = (r + arrowH) * 2;
+  const c = side / 2; // centre of canvas = centre of circle
+
   const delayRing = hasDelay
-    ? `<circle cx="${cx}" cy="${circleY + r}" r="${r + 3}" fill="none" stroke="var(--live)" stroke-width="2" opacity="0.9"/>`
+    ? `<circle cx="0" cy="0" r="${r + 3}" fill="none" stroke="var(--live)" stroke-width="2"/>`
     : "";
-  const svg = `<svg width="${r * 2}" height="${totalH}" viewBox="0 0 ${r * 2} ${totalH}" xmlns="http://www.w3.org/2000/svg">
-    ${arrowSvg}
+
+  // Arrow points toward negative-y (up) in the SVG's local frame; rotation
+  // is applied as CSS on the svg element so the circle stays on the anchor.
+  const arrowPoly = bearing !== null
+    ? `<polygon points="0,${-(r + arrowH)} ${-arrowW},${-r + 3} ${arrowW},${-r + 3}" fill="${bg}"/>`
+    : "";
+
+  const rotateCss = bearing !== null ? `transform:rotate(${bearing}deg);transform-origin:50% 50%` : "";
+
+  const svg = `<svg width="${side}" height="${side}" viewBox="${-c} ${-c} ${side} ${side}"
+    xmlns="http://www.w3.org/2000/svg" style="${rotateCss}">
+    ${arrowPoly}
     ${delayRing}
-    <circle cx="${cx}" cy="${circleY + r}" r="${r}" fill="${bg}"/>
-    <text x="${cx}" y="${circleY + r + 4}" text-anchor="middle" font-family="Helvetica Neue,Arial,sans-serif" font-weight="700" font-size="11" fill="${fg}">${routeId}</text>
+    <circle cx="0" cy="0" r="${r}" fill="${bg}"/>
+    <text x="0" y="4" text-anchor="middle"
+      font-family="Helvetica Neue,Arial,sans-serif" font-weight="700" font-size="11"
+      fill="${fg}">${routeId}</text>
   </svg>`;
+
   return L.divIcon({
     className: "vehicle-marker",
     html: svg,
-    iconSize: [r * 2, totalH],
-    iconAnchor: [cx, direction === "N" ? arrowH + r : r],
+    iconSize: [side, side],
+    iconAnchor: [c, c], // always the circle centre
   });
 }
 
@@ -104,6 +118,20 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
       points: [[s.a.lat, s.a.lon], [s.b.lat, s.b.lon]] as [number, number][],
     }));
   }, [shapes, segments]);
+
+  // Per-vehicle geographic bearing derived from the GTFS shape at the vehicle's station
+  const vehicleBearings = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const v of vehicles) {
+      if (!v.stop_id || !v.direction) continue;
+      const station = stations.find((s) => s.stop_id === v.stop_id);
+      if (!station) continue;
+      const pts = shapePointsForVehicle(v.route_id, v.direction, shapes);
+      if (!pts) continue;
+      map.set(v.trip_id, bearingAtStation(station.lat, station.lon, pts));
+    }
+    return map;
+  }, [vehicles, stations, shapes]);
 
   const renderedLines = useMemo(() =>
     resolvedShapes.map((shape) => {
@@ -199,7 +227,7 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
                   <Marker
                     key={vehicle.trip_id}
                     position={[station.lat + dy, station.lon + dx]}
-                    icon={vehicleIcon(vehicle.route_id, vehicle.direction, vehicle.has_delay_alert)}
+                    icon={vehicleIcon(vehicle.route_id, vehicleBearings.get(vehicle.trip_id) ?? null, vehicle.has_delay_alert)}
                   >
                     <Popup>
                       <div className="station-popup">
