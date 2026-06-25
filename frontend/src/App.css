@@ -101,6 +101,67 @@
   background: var(--bg) !important;
 }
 
+/* ---------- Map legend (floating bottom-left) ---------- */
+.map-legend {
+  position: absolute;
+  bottom: 28px;
+  left: 10px;
+  z-index: 1000;
+  background: rgba(14, 14, 18, 0.88);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+  min-width: 140px;
+}
+
+.map-legend__heading {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin: 0 0 6px;
+}
+
+.map-legend__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.map-legend__swatch {
+  width: 22px;
+  height: 4px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.map-legend__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.map-legend__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.map-legend__dot--express {
+  background: #c8c7c1;
+}
+
+.map-legend__dot--local {
+  background: transparent;
+  border: 1.5px solid #c8c7c1;
+}
+
 /* ---------- Route panel (slide-in over map) ---------- */
 .route-panel {
   position: absolute;

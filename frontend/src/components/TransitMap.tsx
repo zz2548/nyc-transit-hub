@@ -17,13 +17,51 @@ import type { RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot }
 import { RouteBullet } from "./RouteBullet";
 
 const NYC_CENTER: [number, number] = [40.7128, -73.94];
-const LINE_WEIGHT = 4; // px — offset slots are multiples of this
+const LINE_WEIGHT = 4;
 
-// Cast to bypass TypeScript: leaflet-polylineoffset adds `offset` to L.Polyline options
-// and it flows through react-leaflet's constructor spread.
 const OffsetPolyline = Polyline as React.ComponentType<
   React.ComponentProps<typeof Polyline> & { offset?: number }
 >;
+
+// Routes whose segments define express stops
+const EXPRESS_ROUTE_IDS = new Set(["2", "3", "4", "5", "A", "B", "D", "N", "Q", "J", "Z"]);
+
+const LEGEND_GROUPS = [
+  { label: "1 · 2 · 3",      color: "#ee352e" },
+  { label: "4 · 5 · 6",      color: "#00933c" },
+  { label: "7",               color: "#b933ad" },
+  { label: "A · C · E",      color: "#0039a6" },
+  { label: "B · D · F · M",  color: "#ff6319" },
+  { label: "G",               color: "#6cbe45" },
+  { label: "J · Z",          color: "#996633" },
+  { label: "L",               color: "#a7a9ac" },
+  { label: "N · Q · R · W",  color: "#fccc0a" },
+  { label: "SIR",             color: "#0078c6" },
+  { label: "S (shuttle)",     color: "#808183" },
+];
+
+function MapLegend() {
+  return (
+    <div className="map-legend">
+      <p className="map-legend__heading">Lines</p>
+      {LEGEND_GROUPS.map(({ label, color }) => (
+        <div key={label} className="map-legend__row">
+          <span className="map-legend__swatch" style={{ background: color }} />
+          <span className="map-legend__label">{label}</span>
+        </div>
+      ))}
+      <p className="map-legend__heading" style={{ marginTop: 8 }}>Stops</p>
+      <div className="map-legend__row">
+        <span className="map-legend__dot map-legend__dot--express" />
+        <span className="map-legend__label">Express</span>
+      </div>
+      <div className="map-legend__row">
+        <span className="map-legend__dot map-legend__dot--local" />
+        <span className="map-legend__label">Local</span>
+      </div>
+    </div>
+  );
+}
 
 interface TransitMapProps {
   stations: Station[];
@@ -59,17 +97,14 @@ function vehicleIcon(routeId: string, bearing: number | null, hasDelay: boolean)
   const delayRing = hasDelay
     ? `<circle cx="0" cy="0" r="${r + 3}" fill="none" stroke="var(--live)" stroke-width="2"/>`
     : "";
-
   const arrowPoly = bearing !== null
     ? `<polygon points="0,${-(r + arrowH)} ${-arrowW},${-r + 3} ${arrowW},${-r + 3}" fill="${bg}"/>`
     : "";
-
   const rotateCss = bearing !== null ? `transform:rotate(${bearing}deg);transform-origin:50% 50%` : "";
 
   const svg = `<svg width="${side}" height="${side}" viewBox="${-c} ${-c} ${side} ${side}"
     xmlns="http://www.w3.org/2000/svg" style="${rotateCss}">
-    ${arrowPoly}
-    ${delayRing}
+    ${arrowPoly}${delayRing}
     <circle cx="0" cy="0" r="${r}" fill="${bg}"/>
     <text x="0" y="4" text-anchor="middle"
       font-family="Helvetica Neue,Arial,sans-serif" font-weight="700" font-size="11"
@@ -87,11 +122,11 @@ function vehicleIcon(routeId: string, bearing: number | null, hasDelay: boolean)
 export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRouteClick }: TransitMapProps) {
   const vehiclesByStop = useMemo(() => {
     const map = new Map<string, VehicleSnapshot[]>();
-    for (const vehicle of vehicles) {
-      if (!vehicle.stop_id) continue;
-      const list = map.get(vehicle.stop_id) ?? [];
-      list.push(vehicle);
-      map.set(vehicle.stop_id, list);
+    for (const v of vehicles) {
+      if (!v.stop_id) continue;
+      const list = map.get(v.stop_id) ?? [];
+      list.push(v);
+      map.set(v.stop_id, list);
     }
     return map;
   }, [vehicles]);
@@ -108,14 +143,34 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
     return map;
   }, [alerts]);
 
-  const resolvedShapes = useMemo(() => {
-    if (shapes.length > 0) return shapes;
-    return segments.map((s) => ({
+  // One polyline per route: pick longest shape for each route_id
+  const dedupedShapes = useMemo(() => {
+    const source = shapes.length > 0 ? shapes : segments.map((s) => ({
       route_id: s.route_id,
       shape_id: `${s.route_id}-${s.a.stop_id}-${s.b.stop_id}`,
       points: [[s.a.lat, s.a.lon], [s.b.lat, s.b.lon]] as [number, number][],
     }));
+    const byRoute = new Map<string, typeof source[number]>();
+    for (const shape of source) {
+      const existing = byRoute.get(shape.route_id);
+      if (!existing || shape.points.length > existing.points.length) {
+        byRoute.set(shape.route_id, shape);
+      }
+    }
+    return [...byRoute.values()];
   }, [shapes, segments]);
+
+  // Stations served by any express route → express dot; others → local ring
+  const expressStops = useMemo(() => {
+    const set = new Set<string>();
+    for (const seg of segments) {
+      if (EXPRESS_ROUTE_IDS.has(seg.route_id.toUpperCase())) {
+        set.add(seg.a.stop_id);
+        set.add(seg.b.stop_id);
+      }
+    }
+    return set;
+  }, [segments]);
 
   const vehicleBearings = useMemo(() => {
     const map = new Map<string, number>();
@@ -148,7 +203,7 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
       <LayersControl position="topright">
         <LayersControl.Overlay name="Lines" checked>
           <LayerGroup>
-            {resolvedShapes.map((shape) => (
+            {dedupedShapes.map((shape) => (
               <OffsetPolyline
                 key={shape.shape_id}
                 positions={shape.points}
@@ -172,13 +227,18 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
               const here = vehiclesByStop.get(station.stop_id) ?? [];
               const routesHere = new Set(here.map((v) => v.route_id));
               const stationAlerts = [...routesHere].flatMap((r) => alertsByRoute.get(r) ?? []);
+              const isExpress = expressStops.has(station.stop_id);
 
               return (
                 <CircleMarker
                   key={station.stop_id}
                   center={[station.lat, station.lon]}
-                  radius={3}
-                  pathOptions={{ color: "#bdbcb6", fillColor: "#bdbcb6", fillOpacity: 0.85, weight: 0 }}
+                  radius={isExpress ? 4 : 3}
+                  pathOptions={
+                    isExpress
+                      ? { color: "#c8c7c1", fillColor: "#c8c7c1", fillOpacity: 1, weight: 0 }
+                      : { color: "#c8c7c1", fillColor: "transparent", fillOpacity: 0, weight: 1.5 }
+                  }
                 >
                   <Popup>
                     <div className="station-popup">
@@ -187,7 +247,8 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
                         <ul>
                           {here.map((v) => (
                             <li key={v.trip_id}>
-                              <RouteBullet routeId={v.route_id} size={16} /> {v.location_status?.replace(/_/g, " ").toLowerCase()}
+                              <RouteBullet routeId={v.route_id} size={16} />{" "}
+                              {v.location_status?.replace(/_/g, " ").toLowerCase()}
                               {v.direction ? ` · ${v.direction === "N" ? "northbound" : "southbound"}` : ""}
                             </li>
                           ))}
@@ -213,23 +274,30 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
                 const station = stations.find((s) => s.stop_id === vehicle.stop_id);
                 if (!station) return null;
                 const [dx, dy] = offsetFor(vehicle.trip_id, index, group.length);
-
                 return (
                   <Marker
                     key={vehicle.trip_id}
                     position={[station.lat + dy, station.lon + dx]}
-                    icon={vehicleIcon(vehicle.route_id, vehicleBearings.get(vehicle.trip_id) ?? null, vehicle.has_delay_alert)}
+                    icon={vehicleIcon(
+                      vehicle.route_id,
+                      vehicleBearings.get(vehicle.trip_id) ?? null,
+                      vehicle.has_delay_alert,
+                    )}
                   >
                     <Popup>
                       <div className="station-popup">
                         <strong>
-                          {vehicle.route_id} train {vehicle.direction === "N" ? "northbound" : "southbound"}
+                          {vehicle.route_id} train{" "}
+                          {vehicle.direction === "N" ? "northbound" : "southbound"}
                         </strong>
                         <p>To {vehicle.headsign ?? "unknown terminal"}</p>
                         <p>
-                          {vehicle.location_status?.replace(/_/g, " ").toLowerCase()} {station.name}
+                          {vehicle.location_status?.replace(/_/g, " ").toLowerCase()}{" "}
+                          {station.name}
                         </p>
-                        {vehicle.has_delay_alert && <p className="station-popup__alert">⚠ Delay reported</p>}
+                        {vehicle.has_delay_alert && (
+                          <p className="station-popup__alert">⚠ Delay reported</p>
+                        )}
                       </div>
                     </Popup>
                   </Marker>
@@ -239,6 +307,8 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
           </LayerGroup>
         </LayersControl.Overlay>
       </LayersControl>
+
+      <MapLegend />
     </MapContainer>
   );
 }
