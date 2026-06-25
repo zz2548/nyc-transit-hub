@@ -93,6 +93,11 @@ export function RoutePanel({ routeId, onClose }: RoutePanelProps) {
               ))}
             </div>
           )}
+          <div className="route-panel__legend">
+            <span><span className="route-panel__train-dot">●</span> Stopped</span>
+            <span><span className="route-panel__train-dot">→</span> Arriving</span>
+            <span><span className="route-panel__train-dot">◎</span> En route</span>
+          </div>
           <DirectionPane dir={data.directions[activeDir]} color={color} />
         </>
       )}
