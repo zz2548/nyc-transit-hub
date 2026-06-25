@@ -6,7 +6,7 @@ import os
 from flask import Blueprint, current_app, jsonify, request
 
 from app.extensions import db
-from app.models import IngestRun, RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot
+from app.models import IngestRun, RouteSegment, RouteShape, ServiceAlert, Station, StopArrival, VehicleSnapshot
 
 _DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 
@@ -188,6 +188,82 @@ def route_stops(route_id: str) -> tuple:
         })
 
     return jsonify({"route_id": rid, "directions": directions})
+
+
+@api_bp.get("/stations/<stop_id>/arrivals")
+def station_arrivals(stop_id: str) -> tuple:
+    """Upcoming train arrivals at a station for the next 90 minutes.
+
+    Returns arrivals sorted by arrival_time, each with minutes_away computed
+    server-side so the client doesn't need to care about clock skew.
+    Also returns nearby stations (within ~400 m walking distance) so the
+    frontend can show walkable connections.
+    """
+    import time
+
+    now_ts = int(time.time())
+
+    station = db.session.get(Station, stop_id)
+    if station is None:
+        return jsonify({"error": "Station not found"}), 404
+
+    arrivals_q = (
+        StopArrival.query
+        .filter_by(stop_id=stop_id)
+        .filter(StopArrival.arrival_time >= now_ts)
+        .order_by(StopArrival.arrival_time)
+        .limit(40)
+        .all()
+    )
+
+    arrivals = []
+    for a in arrivals_q:
+        minutes = max(0, (a.arrival_time - now_ts) // 60)
+        arrivals.append({
+            "trip_id": a.trip_id,
+            "route_id": a.route_id,
+            "direction": a.direction,
+            "headsign": a.headsign,
+            "arrival_time": a.arrival_time,
+            "minutes_away": minutes,
+        })
+
+    # Walkable connections: stations within ~400 m (≈ 0.0036 degrees)
+    WALK_THRESH = 0.0036
+    nearby = Station.query.filter(
+        Station.stop_id != stop_id,
+        Station.lat.between(station.lat - WALK_THRESH, station.lat + WALK_THRESH),
+        Station.lon.between(station.lon - WALK_THRESH, station.lon + WALK_THRESH),
+    ).all()
+
+    connections = []
+    for s in nearby:
+        dist_m = math.hypot(
+            (s.lat - station.lat) * 111_000,
+            (s.lon - station.lon) * 111_000 * math.cos(math.radians(station.lat)),
+        )
+        if dist_m <= 400:
+            # What routes serve this nearby station?
+            route_ids = list({
+                seg.route_id
+                for seg in RouteSegment.query.filter(
+                    (RouteSegment.stop_id_a == s.stop_id) | (RouteSegment.stop_id_b == s.stop_id)
+                ).all()
+            })
+            connections.append({
+                "stop_id": s.stop_id,
+                "name": s.name,
+                "distance_m": int(dist_m),
+                "routes": sorted(route_ids),
+            })
+    connections.sort(key=lambda c: c["distance_m"])
+
+    return jsonify({
+        "stop_id": stop_id,
+        "name": station.name,
+        "arrivals": arrivals,
+        "connections": connections,
+    })
 
 
 @api_bp.get("/stats/alerts-by-route")

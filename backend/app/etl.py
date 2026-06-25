@@ -25,7 +25,7 @@ from nyct_gtfs import NYCTFeed
 
 from app.extensions import db
 from app.mta_alerts import fetch_alerts_feed_dict, parse_alerts_feed_dict
-from app.models import IngestRun, RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot
+from app.models import IngestRun, RouteSegment, RouteShape, ServiceAlert, Station, StopArrival, VehicleSnapshot
 
 logger = logging.getLogger(__name__)
 
@@ -240,6 +240,43 @@ def _ingest_route_segments(trips: list[Any], child_to_parent: dict[str, str], kn
     return new_count
 
 
+def _ingest_arrivals(trips: list[Any], child_to_parent: dict[str, str], known_stop_ids: set[str]) -> int:
+    """Build the stop_arrivals table from each active trip's stop_time_updates.
+    Only stores future arrivals (next ~90 minutes). Table is fully replaced
+    each ingest cycle.
+    """
+    from datetime import timezone
+    now_ts = datetime.utcnow().replace(tzinfo=timezone.utc).timestamp()
+    cutoff = now_ts + 90 * 60  # 90 minutes ahead
+
+    records = []
+    for trip in trips:
+        for update in trip.stop_time_updates:
+            arr = update.arrival or update.departure
+            if arr is None:
+                continue
+            # nyct-gtfs returns naive datetime in UTC
+            arr_ts = arr.replace(tzinfo=timezone.utc).timestamp()
+            if arr_ts < now_ts or arr_ts > cutoff:
+                continue
+            parent = resolve_parent_stop_id(update.stop_id, child_to_parent)
+            if parent not in known_stop_ids:
+                continue
+            records.append({
+                "trip_id": trip.trip_id,
+                "route_id": trip.route_id,
+                "direction": trip.direction,
+                "headsign": trip.headsign_text,
+                "stop_id": parent,
+                "arrival_time": int(arr_ts),
+            })
+
+    StopArrival.query.delete()
+    db.session.bulk_insert_mappings(StopArrival, records)
+    db.session.commit()
+    return len(records)
+
+
 def _ingest_alerts() -> int:
     feed_dict = fetch_alerts_feed_dict()
     records = parse_alerts_feed_dict(feed_dict)
@@ -275,6 +312,7 @@ def run_ingest() -> IngestRun:
 
         run.vehicle_count = _ingest_vehicles(trips, child_to_parent, known_stop_ids)
         run.new_segment_count = _ingest_route_segments(trips, child_to_parent, known_stop_ids)
+        _ingest_arrivals(trips, child_to_parent, known_stop_ids)
         run.alert_count = _ingest_alerts()
         run.status = "success"
     except Exception as exc:  # pragma: no cover - exercised via integration, not unit tests

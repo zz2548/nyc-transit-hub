@@ -145,6 +145,34 @@ class RouteShape(db.Model):
         }
 
 
+class StopArrival(db.Model):
+    """Upcoming train arrivals at each station, rebuilt on every ingest cycle.
+    Derived from the GTFS-RT TripUpdate feed's stop_time_updates, which carry
+    predicted arrival datetimes for every scheduled stop on an active trip.
+    Only future arrivals are stored; the table is fully replaced each run.
+    """
+
+    __tablename__ = "stop_arrivals"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    trip_id = db.Column(db.String(64), nullable=False)
+    route_id = db.Column(db.String(8), nullable=False)
+    direction = db.Column(db.String(1))       # "N" or "S"
+    headsign = db.Column(db.String(128))
+    stop_id = db.Column(db.String(16), db.ForeignKey("stations.stop_id"), nullable=False, index=True)
+    arrival_time = db.Column(db.Integer, nullable=False)  # Unix timestamp (UTC)
+
+    def to_dict(self) -> dict:
+        return {
+            "trip_id": self.trip_id,
+            "route_id": self.route_id,
+            "direction": self.direction,
+            "headsign": self.headsign,
+            "stop_id": self.stop_id,
+            "arrival_time": self.arrival_time,
+        }
+
+
 class IngestRun(db.Model):
     """Observability log for the ETL pipeline -- proof the background job is
     actually running, and a place to see failures without reading server logs.

@@ -60,6 +60,29 @@ export interface RouteStops {
   directions: RouteDirection[];
 }
 
+export interface StopArrival {
+  trip_id: string;
+  route_id: string;
+  direction: "N" | "S" | null;
+  headsign: string | null;
+  arrival_time: number;
+  minutes_away: number;
+}
+
+export interface WalkableConnection {
+  stop_id: string;
+  name: string;
+  distance_m: number;
+  routes: string[];
+}
+
+export interface StationArrivals {
+  stop_id: string;
+  name: string;
+  arrivals: StopArrival[];
+  connections: WalkableConnection[];
+}
+
 export interface AlertsByRoute {
   route: string;
   count: number;

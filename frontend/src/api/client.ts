@@ -6,6 +6,7 @@ import type {
   RouteStops,
   ServiceAlert,
   Station,
+  StationArrivals,
   VehicleSnapshot,
 } from "../types";
 
@@ -28,4 +29,5 @@ export const api = {
   routeSegments: () => getJson<RouteSegment[]>("/api/route-segments"),
   routeShapes: () => getJson<RouteShape[]>("/api/route-shapes"),
   routeStops: (routeId: string) => getJson<RouteStops>(`/api/routes/${routeId}/stops`),
+  stationArrivals: (stopId: string) => getJson<StationArrivals>(`/api/stations/${stopId}/arrivals`),
 };
