@@ -41,6 +41,25 @@ export interface RouteShape {
   points: [number, number][];
 }
 
+export interface RouteStopEntry {
+  stop_id: string;
+  name: string;
+  lat: number;
+  lon: number;
+  vehicles: VehicleSnapshot[];
+}
+
+export interface RouteDirection {
+  direction_id: number;
+  headsign: string;
+  stops: RouteStopEntry[];
+}
+
+export interface RouteStops {
+  route_id: string;
+  directions: RouteDirection[];
+}
+
 export interface AlertsByRoute {
   route: string;
   count: number;

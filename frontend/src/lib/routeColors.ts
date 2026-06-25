@@ -1,3 +1,21 @@
+const ROUTE_COLOR_HEX: Record<string, string> = {
+  "1": "#ee352e", "2": "#ee352e", "3": "#ee352e",
+  "4": "#00933c", "5": "#00933c", "6": "#00933c", "6X": "#00933c",
+  "7": "#b933ad", "7X": "#b933ad",
+  "A": "#0039a6", "C": "#0039a6", "E": "#0039a6",
+  "B": "#ff6319", "D": "#ff6319", "F": "#ff6319", "FX": "#ff6319", "M": "#ff6319",
+  "G": "#6cbe45",
+  "J": "#996633", "Z": "#996633",
+  "L": "#a7a9ac",
+  "N": "#fccc0a", "Q": "#fccc0a", "R": "#fccc0a", "W": "#fccc0a",
+  "SI": "#0078c6", "SIR": "#0078c6",
+  "GS": "#808183", "FS": "#808183", "H": "#808183", "S": "#808183",
+};
+
+export function routeColorHex(routeId: string): string {
+  return ROUTE_COLOR_HEX[routeId.toUpperCase()] ?? "#888888";
+}
+
 const ROUTE_COLOR_VAR: Record<string, string> = {
   "1": "--line-irt-red",
   "2": "--line-irt-red",

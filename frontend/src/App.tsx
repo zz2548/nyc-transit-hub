@@ -3,6 +3,7 @@ import { api } from "./api/client";
 import { AlertsPanel } from "./components/AlertsPanel";
 import { DelayChart } from "./components/DelayChart";
 import { Header } from "./components/Header";
+import { RoutePanel } from "./components/RoutePanel";
 import { TransitMap } from "./components/TransitMap";
 import { relativeTime } from "./lib/time";
 import type { AlertsByRoute, RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot } from "./types";
@@ -17,6 +18,7 @@ export default function App() {
   const [alertsByRoute, setAlertsByRoute] = useState<AlertsByRoute[]>([]);
   const [segments, setSegments] = useState<RouteSegment[]>([]);
   const [shapes, setShapes] = useState<RouteShape[]>([]);
+  const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
   const [lastSyncIso, setLastSyncIso] = useState<string | null>(null);
   const [isLive, setIsLive] = useState(false);
 
@@ -64,7 +66,19 @@ export default function App() {
       <Header isLive={isLive} lastSync={relativeTime(lastSyncIso)} vehicleCount={vehicles.length} />
 
       <main className="app-main">
-        <TransitMap stations={stations} vehicles={vehicles} alerts={alerts} segments={segments} shapes={shapes} />
+        <div className="map-container">
+          <TransitMap
+            stations={stations}
+            vehicles={vehicles}
+            alerts={alerts}
+            segments={segments}
+            shapes={shapes}
+            onRouteClick={setSelectedRoute}
+          />
+          {selectedRoute && (
+            <RoutePanel routeId={selectedRoute} onClose={() => setSelectedRoute(null)} />
+          )}
+        </div>
 
         <aside className="app-sidebar">
           <AlertsPanel alerts={alerts} />

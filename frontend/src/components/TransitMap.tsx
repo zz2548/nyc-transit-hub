@@ -10,7 +10,8 @@ import {
   Popup,
   TileLayer,
 } from "react-leaflet";
-import { routeColorVar, routeTextColor } from "../lib/routeColors";
+import { routeColorVar, routeColorHex, routeTextColor } from "../lib/routeColors";
+import { offsetPolyline, routeOffsetMeters, samplePolylineAt } from "../lib/routeGeometry";
 import type { RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot } from "../types";
 import { RouteBullet } from "./RouteBullet";
 
@@ -22,13 +23,9 @@ interface TransitMapProps {
   alerts: ServiceAlert[];
   segments: RouteSegment[];
   shapes: RouteShape[];
+  onRouteClick: (routeId: string) => void;
 }
 
-/** Multiple trains can be "at" the same station simultaneously (different
- * lines, or local/express on the same line). Spread them around the
- * station's point so they're each clickable instead of stacking exactly
- * on top of one another. Deterministic so markers don't jitter on re-render.
- */
 function offsetFor(tripId: string, index: number, total: number): [number, number] {
   if (total <= 1) return [0, 0];
   const angle = (2 * Math.PI * index) / total + hashToUnit(tripId);
@@ -53,7 +50,19 @@ function vehicleIcon(routeId: string, hasDelay: boolean): L.DivIcon {
   });
 }
 
-export function TransitMap({ stations, vehicles, alerts, segments, shapes }: TransitMapProps) {
+function arrowIcon(bearing: number, color: string): L.DivIcon {
+  return L.divIcon({
+    className: "",
+    html: `<svg width="14" height="14" viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg"
+      style="transform:rotate(${bearing}deg);transform-origin:50% 50%">
+      <polygon points="7,1 12,13 7,10 2,13" fill="${color}" opacity="0.9"/>
+    </svg>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  });
+}
+
+export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRouteClick }: TransitMapProps) {
   const vehiclesByStop = useMemo(() => {
     const map = new Map<string, VehicleSnapshot[]>();
     for (const vehicle of vehicles) {
@@ -77,6 +86,27 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes }: Tra
     return map;
   }, [alerts]);
 
+  // Resolved shapes — prefer GTFS shapes, fall back to straight segments
+  const resolvedShapes = useMemo(() => {
+    if (shapes.length > 0) return shapes;
+    return segments.map((s) => ({
+      route_id: s.route_id,
+      shape_id: `${s.route_id}-${s.a.stop_id}-${s.b.stop_id}`,
+      points: [[s.a.lat, s.a.lon], [s.b.lat, s.b.lon]] as [number, number][],
+    }));
+  }, [shapes, segments]);
+
+  // Offset polylines and arrow sample points
+  const renderedLines = useMemo(() =>
+    resolvedShapes.map((shape) => {
+      const offsetM = routeOffsetMeters(shape.route_id);
+      const pts = offsetPolyline(shape.points, offsetM);
+      // Sample arrow at 40% along the shape
+      const arrow = samplePolylineAt(pts, 0.4);
+      return { shape, pts, arrow };
+    }),
+  [resolvedShapes]);
+
   return (
     <MapContainer
       center={NYC_CENTER}
@@ -95,21 +125,31 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes }: Tra
       <LayersControl position="topright">
         <LayersControl.Overlay name="Lines" checked>
           <LayerGroup>
-            {(shapes.length > 0 ? shapes : segments.map((s) => ({
-              route_id: s.route_id,
-              shape_id: `${s.route_id}-${s.a.stop_id}-${s.b.stop_id}`,
-              points: [[s.a.lat, s.a.lon], [s.b.lat, s.b.lon]] as [number, number][],
-            }))).map((shape) => (
+            {renderedLines.map(({ shape, pts }) => (
               <Polyline
                 key={shape.shape_id}
-                positions={shape.points}
+                positions={pts}
                 pathOptions={{
                   color: routeColorVar(shape.route_id),
-                  weight: 3,
-                  opacity: 0.85,
+                  weight: 3.5,
+                  opacity: 0.9,
                   lineCap: "round",
                   lineJoin: "round",
                 }}
+                eventHandlers={{ click: () => onRouteClick(shape.route_id) }}
+              />
+            ))}
+          </LayerGroup>
+        </LayersControl.Overlay>
+
+        <LayersControl.Overlay name="Direction arrows" checked>
+          <LayerGroup>
+            {renderedLines.map(({ shape, arrow }) => (
+              <Marker
+                key={`arrow-${shape.shape_id}`}
+                position={arrow.point}
+                icon={arrowIcon(arrow.bearing, routeColorHex(shape.route_id))}
+                interactive={false}
               />
             ))}
           </LayerGroup>
