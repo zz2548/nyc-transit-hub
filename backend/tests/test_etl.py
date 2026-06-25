@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from app.etl import trip_to_vehicle_record
+from app.etl import _load_child_to_parent_map, resolve_parent_stop_id, trip_to_vehicle_record
 from app.mta_alerts import parse_alerts_feed_dict
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -61,3 +61,22 @@ def test_parse_alerts_feed_dict_against_real_sample():
 
 def test_parse_alerts_feed_dict_handles_empty_feed():
     assert parse_alerts_feed_dict({"entity": []}) == []
+
+
+def test_resolve_parent_stop_id_maps_directional_child_to_parent():
+    # Real regression: the feed reports "228N" (a directional child stop),
+    # but Station only stores parent ids like "228". Without this mapping,
+    # every single vehicle silently failed to match and the map showed zero
+    # trains despite the ETL run reporting "success".
+    child_to_parent = _load_child_to_parent_map()
+
+    assert resolve_parent_stop_id("228N", child_to_parent) == "228"
+    assert resolve_parent_stop_id("127S", child_to_parent) == "127"
+
+
+def test_resolve_parent_stop_id_passes_through_unknown_or_parent_ids():
+    child_to_parent = _load_child_to_parent_map()
+
+    assert resolve_parent_stop_id("228", child_to_parent) == "228"  # already a parent id
+    assert resolve_parent_stop_id("not-a-real-stop", child_to_parent) == "not-a-real-stop"
+    assert resolve_parent_stop_id(None, child_to_parent) is None

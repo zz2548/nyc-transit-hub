@@ -35,6 +35,39 @@ FEED_GROUPS = ["1", "A", "B", "G", "J", "N", "L", "SI"]
 
 _STOPS_TXT_PATH = os.path.join(os.path.dirname(__file__), "data", "stops.txt")
 
+_child_to_parent_cache: dict[str, str] | None = None
+
+
+def _load_child_to_parent_map() -> dict[str, str]:
+    """Build a lookup from directional child stop id (e.g. "228N", as
+    reported by VehiclePosition.stop_id in the realtime feed) to its parent
+    station id (e.g. "228", as stored in `Station`). Cached at module level
+    since the static file never changes at runtime.
+    """
+    global _child_to_parent_cache
+    if _child_to_parent_cache is not None:
+        return _child_to_parent_cache
+
+    mapping: dict[str, str] = {}
+    with open(_STOPS_TXT_PATH, newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            parent = row.get("parent_station")
+            if parent:
+                mapping[row["stop_id"]] = parent
+
+    _child_to_parent_cache = mapping
+    return mapping
+
+
+def resolve_parent_stop_id(stop_id: str | None, child_to_parent: dict[str, str]) -> str | None:
+    """Translate a feed-reported directional stop id to the parent station
+    id it belongs to. Falls back to the input unchanged if it's already a
+    parent id (or unrecognized) -- pure function, see tests/test_etl.py.
+    """
+    if stop_id is None:
+        return None
+    return child_to_parent.get(stop_id, stop_id)
+
 
 def seed_stations() -> int:
     """Idempotently load parent stations (location_type == "1") from the
@@ -85,6 +118,7 @@ def trip_to_vehicle_record(trip: Any) -> dict[str, Any] | None:
 
 def _ingest_vehicles() -> int:
     known_stop_ids = {row[0] for row in db.session.query(Station.stop_id).all()}
+    child_to_parent = _load_child_to_parent_map()
     records = []
 
     for group in FEED_GROUPS:
@@ -96,7 +130,10 @@ def _ingest_vehicles() -> int:
 
         for trip in feed.trips:
             record = trip_to_vehicle_record(trip)
-            if record and record["stop_id"] in known_stop_ids:
+            if not record:
+                continue
+            record["stop_id"] = resolve_parent_stop_id(record["stop_id"], child_to_parent)
+            if record["stop_id"] in known_stop_ids:
                 records.append(record)
 
     VehicleSnapshot.query.delete()
