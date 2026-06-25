@@ -1,0 +1,741 @@
+{
+  "header": {
+    "gtfsRealtimeVersion": "2.0",
+    "incrementality": "FULL_DATASET",
+    "timestamp": "1743209422"
+  },
+  "entity": [
+    {
+      "id": "lmm:alert:420072",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1743202480"
+          }
+        ],
+        "informedEntity": [
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "A"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "A61"
+          }
+        ],
+        "headerText": {
+          "translation": [
+            {
+              "text": "Northbound [A] trains are running with delays while we address a signal problem near Rockaway Blvd.",
+              "language": "en"
+            },
+            {
+              "text": "<p>Northbound [A] trains are running with delays while we address a signal problem near <b>Rockaway Blvd</b>.</p>",
+              "language": "en-html"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lmm:alert:420097",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1743208105"
+          }
+        ],
+        "informedEntity": [
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "1"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "142"
+          }
+        ],
+        "headerText": {
+          "translation": [
+            {
+              "text": "[1] trains are running with delays in both directions after EMS responded to a person in need of assistance at South Ferry.",
+              "language": "en"
+            },
+            {
+              "text": "<p>[1] trains are running with delays in both directions after EMS responded to a person in need of assistance at <b>South Ferry</b>.</p>",
+              "language": "en-html"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lmm:alert:420103",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1743209410",
+            "end": "1743211500"
+          }
+        ],
+        "informedEntity": [
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "4"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "418"
+          }
+        ],
+        "headerText": {
+          "translation": [
+            {
+              "text": "Northbound [4][5] trains are running with delays after we removed a train from service and requested EMS for someone at Fulton St.",
+              "language": "en"
+            },
+            {
+              "text": "<p>Northbound [4][5] trains are running with delays after we removed a train from service and requested EMS for someone at <b>Fulton St</b>.</p>",
+              "language": "en-html"
+            }
+          ]
+        },
+        "descriptionText": {
+          "translation": [
+            {
+              "text": "Northbound [5] trains have resumed making scheduled stops from Nevins St to 149 St-Grand Concourse.",
+              "language": "en"
+            },
+            {
+              "text": "<p>Northbound [5] trains have resumed making scheduled stops from <b>Nevins St</b> to <b>149 St-Grand Concourse</b>.</p>",
+              "language": "en-html"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lmm:alert:420104",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1743209410",
+            "end": "1743211500"
+          }
+        ],
+        "informedEntity": [
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "5"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "418"
+          }
+        ],
+        "headerText": {
+          "translation": [
+            {
+              "text": "Northbound [4][5] trains are running with delays after we removed a train from service and requested EMS for someone at Fulton St.",
+              "language": "en"
+            },
+            {
+              "text": "<p>Northbound [4][5] trains are running with delays after we removed a train from service and requested EMS for someone at <b>Fulton St</b>.</p>",
+              "language": "en-html"
+            }
+          ]
+        },
+        "descriptionText": {
+          "translation": [
+            {
+              "text": "Northbound [5] trains have resumed making scheduled stops from Nevins St to 149 St-Grand Concourse.",
+              "language": "en"
+            },
+            {
+              "text": "<p>Northbound [5] trains have resumed making scheduled stops from <b>Nevins St</b> to <b>149 St-Grand Concourse</b>.</p>",
+              "language": "en-html"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lmm:alert:420102",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1743209170"
+          }
+        ],
+        "informedEntity": [
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "F"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "M"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "F14"
+          }
+        ],
+        "headerText": {
+          "translation": [
+            {
+              "text": "Brooklyn-bound [F][M] trains are running with delays after NYPD conducted an investigation at 2 Av.",
+              "language": "en"
+            },
+            {
+              "text": "<p><strong>Brooklyn</strong>-bound [F][M] trains are running with delays after NYPD conducted an investigation at <b>2 Av</b>.</p>",
+              "language": "en-html"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lmm:planned_work:23481",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1743479100",
+            "end": "1743498000"
+          },
+          {
+            "start": "1743565500",
+            "end": "1743584400"
+          },
+          {
+            "start": "1743651900",
+            "end": "1743670800"
+          },
+          {
+            "start": "1743738300",
+            "end": "1743757200"
+          }
+        ],
+        "informedEntity": [
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "A"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "A09"
+          }
+        ],
+        "headerText": {
+          "translation": [
+            {
+              "text": "In Upper Manhattan, no [A] between 168 St and 207 St",
+              "language": "en"
+            },
+            {
+              "text": "<p>In Upper Manhattan, no [A] between <b>168 St</b> and <strong>207 St</strong></p>",
+              "language": "en-html"
+            }
+          ]
+        },
+        "descriptionText": {
+          "translation": [
+            {
+              "text": "[A] runs between Queens and 168 St, the last stop.\n\n[1] makes nearby stops between 168 St-Washington Hts and 207 St.\n\nshuttle bus icon Free shuttle buses run along two routes making stops:\n1. Along Broadway between 168 St and Inwood-207 St\n2. Along Fort Washington Ave between 168 St and 190 St\nTransfer at 168 St accessibility icon (A) | [1][A] shuttle bus icon\nWhat's happening?\nUrgent repairs\n\naccessibility icon This service change affects one or more ADA accessible stations and these travel alternatives may not be fully accessible. Please contact 511 to plan your trip.",
+              "language": "en"
+            },
+            {
+              "text": "<p>[A] runs between Queens and <b>168 St</b>, the last stop.</p><p style=\"min-height:10px\"></p><p>[1] makes <a title=\"\" href=\"https://map.mta.info/#@40.8504936,-73.9301121,14.02z\" rel=\"noopener noreferrer nofollow\" target=\"_blank\">nearby</a> stops between <b>168 St-Washington Hts</b> and <b>207 St</b>.</p><p style=\"min-height:10px\"></p><p>[shuttle bus icon]Free shuttle buses run along two routes making stops:</p><p>1. Along <strong>Broadway</strong> between <b>168 St</b> and <b>Inwood-207 St</b></p><p>2. Along <strong>Fort Washington Ave</strong> between <b>168 St</b> and <b>190 St</b></p><ul><li><p>Transfer at <b>168 St</b> [accessibility icon] (A) <strong>|</strong> [1][A] [shuttle bus icon]</p></li></ul><p><strong>What's happening?</strong></p><p>Urgent repairs</p><p style=\"min-height:10px\"></p><p>[accessibility icon] This service change affects one or more ADA accessible stations and these travel alternatives may not be fully accessible. Please contact 511 to plan your trip.</p>",
+              "language": "en-html"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lmm:planned_work:23480",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1743471900",
+            "end": "1743498000"
+          },
+          {
+            "start": "1743558300",
+            "end": "1743584400"
+          },
+          {
+            "start": "1743644700",
+            "end": "1743670800"
+          },
+          {
+            "start": "1743731100",
+            "end": "1743757200"
+          }
+        ],
+        "informedEntity": [
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "F"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "A41"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "F35"
+          }
+        ],
+        "headerText": {
+          "translation": [
+            {
+              "text": "In Brooklyn, Coney Island-bound [F] runs express from Jay St-MetroTech to Kings Hwy",
+              "language": "en"
+            },
+            {
+              "text": "<p>In Brooklyn, Coney Island-bound [F] runs express from <b>Jay St-MetroTech</b> to <b>Kings Hwy</b></p>",
+              "language": "en-html"
+            }
+          ]
+        },
+        "descriptionText": {
+          "translation": [
+            {
+              "text": "Trains stop at 7 Av, Church Av and 18 Av.\n\nFor service to Bergen St, Carroll St, Smith-9 Sts, 4 Av-9 St, 15 St-Prospect Park and Fort Hamilton Pkwy, take the [F] to 7 Av or Church Av and transfer to a Manhattan-bound [F].\n\nFor service to Ditmas Av, Avenue I, Bay Pkwy, Avenue N and Avenue P, take the [F] to 18 Av or Kings Hwy and transfer to a Manhattan-bound [F].\n\nFor service from these stations, take the [F] to 18 Av, Church Av, 7 Av or Jay St-MetroTech and transfer to a Coney Island-bound [F].\n\nNote: No [G] service between Church Av and Hoyt-Schermerhorn Sts during this time.\n\nWhat's happening?\nWe're modernizing signals",
+              "language": "en"
+            },
+            {
+              "text": "<p>Trains stop at <b>7 Av</b>, <b>Church Av</b> and <b>18 Av</b>.</p><p style=\"min-height:10px\"></p><p>For service to <b>Bergen St</b>, <b>Carroll St</b>, <b>Smith-9 Sts</b>, <b>4 Av-9 St</b>, <b>15 St-Prospect Park</b> and <b>Fort Hamilton Pkwy</b>, take the [F] to <b>7 Av</b> or <b>Church Av</b> and transfer to a Manhattan-bound [F].</p><p style=\"min-height:10px\"></p><p>For service to <b>Ditmas Av</b>, <b>Avenue I</b>, <b>Bay Pkwy</b>, <b>Avenue N</b> and <b>Avenue P</b>, take the [F] to <b>18 Av</b> or <b>Kings Hwy</b> and transfer to a Manhattan-bound [F].</p><p style=\"min-height:10px\"></p><p>For service from these stations, take the [F] to <b>18 Av</b>, <b>Church Av</b>, <b>7 Av</b> or <b>Jay St-MetroTech</b> and transfer to a Coney Island-bound [F].</p><p style=\"min-height:10px\"></p><p><strong>Note:</strong> No [G] service between <b>Church Av</b> and \u200c<b>Hoyt-Schermerhorn Sts</b> during this time.</p><p style=\"min-height:10px\"></p><p><strong>What's happening?</strong></p><p>We're modernizing signals</p>",
+              "language": "en-html"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lmm:planned_work:23479",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1743471000",
+            "end": "1743498000"
+          },
+          {
+            "start": "1743557400",
+            "end": "1743584400"
+          },
+          {
+            "start": "1743643800",
+            "end": "1743670800"
+          },
+          {
+            "start": "1743730200",
+            "end": "1743757200"
+          }
+        ],
+        "informedEntity": [
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "G"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "A42"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "F27"
+          }
+        ],
+        "headerText": {
+          "translation": [
+            {
+              "text": "In Brooklyn, no [G] between Hoyt-Schermerhorn Sts and Church Av",
+              "language": "en"
+            },
+            {
+              "text": "<p>In Brooklyn, no [G] between <b>Hoyt-Schermerhorn Sts</b> and <b>Church Av</b></p>",
+              "language": "en-html"
+            }
+          ]
+        },
+        "descriptionText": {
+          "translation": [
+            {
+              "text": "[G] runs in two sections:\n1. Between Court Sq and Bedford-Nostrand Avs\n2. Between Bedford-Nostrand Avs and Hoyt-Schermerhorn Sts, every 20 minutes\n(All trains board/depart from the Court Sq-bound platform between Bedford-Nostrand Avs and Hoyt-Schermerhorn Sts)\nTransfer at Bedford-Nostrand Avs to continue your trip.\nFor Bergen St *, Carroll St *, Smith-9 Sts *, 4 Av-9 St *, 7 Av, 15 St-Prospect Park *, Fort Hamilton Pkwy * and Church Av, take the [F] instead.\nTransfer between [G] and [A][C] trains at Hoyt-Schermerhorn Sts\nTransfer between [A][C] and [F] trains at Jay St-MetroTech\n*Only Manhattan-bound service during this time.\n\nWhat's happening?\nWe're modernizing signals\n\naccessibility icon This service change affects one or more ADA accessible stations and these travel alternatives may not be fully accessible. Please contact 511 to plan your trip.",
+              "language": "en"
+            },
+            {
+              "text": "<p>[G] runs in two sections:</p><p>1. Between <b>Court Sq</b> and <b>Bedford-Nostrand Avs</b></p><p>2. Between <b>Bedford-Nostrand Avs</b> and <b>Hoyt-Schermerhorn Sts</b>, every 20 minutes</p><p>(All trains board/depart from the Court Sq-bound platform between <b>Bedford-Nostrand Avs</b> and <b>Hoyt-Schermerhorn Sts</b>)</p><ul><li><p>Transfer at <b>Bedford-Nostrand Avs</b> to continue your trip.</p></li></ul><p>For <b>Bergen St</b>*, <b>Carroll St</b>*, <b>Smith-9 Sts</b>*, <b>4 Av-9 St</b>*, <b>7 Av</b>, <b>15 St-Prospect Park</b>*, <b>Fort Hamilton Pkwy</b>* and <b>Church Av</b>, take the [F] instead.</p><ul><li><p>Transfer between [G] and [A][C] trains at <b>Hoyt-Schermerhorn Sts</b></p></li><li><p>Transfer between [A][C] and [F] trains at <b>Jay St-MetroTech</b></p></li></ul><p>*Only Manhattan-bound service during this time.</p><p style=\"min-height:10px\"></p><p><strong>What's happening?</strong></p><p>We're modernizing signals</p><p style=\"min-height:10px\"></p><p>[accessibility icon] This service change affects one or more ADA accessible stations and these travel alternatives may not be fully accessible. Please contact 511 to plan your trip.</p>",
+              "language": "en-html"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lmm:planned_work:23474",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1743830100",
+            "end": "1744012800"
+          }
+        ],
+        "informedEntity": [
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "SI"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "S09"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "S31"
+          }
+        ],
+        "headerText": {
+          "translation": [
+            {
+              "text": "[SIR] runs every 45 minutes between St George and Tottenville",
+              "language": "en"
+            },
+            {
+              "text": "<p>[SIR] runs every 45 minutes between <b>St George</b> and <b>Tottenville</b></p>",
+              "language": "en-html"
+            }
+          ]
+        },
+        "descriptionText": {
+          "translation": [
+            {
+              "text": "Tottenville-bound trains depart St George  at 1:21 AM, 2:06 AM, 2:51 AM, 3:36 AM, 4:21 AM, 5:06, 5:51 AM, and every 45 minutes thereafter.St George-bound trains depart Tottenville at 2:36 AM, 3:21 AM, 4:06 AM, 4:51 AM, 5:36 AM, 6:21 AM, and every 45 minutes thereafter.\n\nWhat's happening?\nScheduled maintenance",
+              "language": "en"
+            },
+            {
+              "text": "<p><strong>Tottenville-bound</strong> trains depart \u200c<b>St George</b>\u200c at 1:21 AM, 2:06 AM, 2:51 AM, 3:36 AM, 4:21 AM, 5:06, 5:51 AM, and every 45 minutes thereafter.<br><br><strong>St George-bound</strong> trains depart \u200c<b>Tottenville</b> \u200cat 2:36 AM, 3:21 AM, 4:06 AM, 4:51 AM, 5:36 AM, 6:21 AM, and every 45 minutes thereafter.</p><p></p><p><strong>What's happening?</strong></p><p>Scheduled maintenance</p>",
+              "language": "en-html"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lmm:planned_work:23471",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1743830100",
+            "end": "1744012800"
+          }
+        ],
+        "informedEntity": [
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "SI"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "S16"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "S23"
+          }
+        ],
+        "headerText": {
+          "translation": [
+            {
+              "text": "All [SIR] trains from Huguenot to Grant City board from the Tottenville-bound platform",
+              "language": "en"
+            },
+            {
+              "text": "<p>All [SIR] trains from <b>Huguenot</b> to <b>Grant City</b> board from the Tottenville-bound platform</p>",
+              "language": "en-html"
+            }
+          ]
+        },
+        "descriptionText": {
+          "translation": [
+            {
+              "text": "Boarding change includes Huguenot, Annadale, Eltingville, Great Kills, Bay Terrace, Oakwood Heights, New Dorp and Grant City stations. \nWhat's happening?\nScheduled maintenance",
+              "language": "en"
+            },
+            {
+              "text": "<ul><li><p>Boarding change includes <b>Huguenot</b>, <b>Annadale</b>, <b>Eltingville</b>, <b>Great Kills</b>, <b>Bay Terrace</b>, <b>Oakwood Heights</b>, <b>New Dorp</b> and <b>Grant City</b> stations. </p></li></ul><p><strong>What's happening?</strong></p><p>Scheduled maintenance</p>",
+              "language": "en-html"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lmm:planned_work:23470",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1743775200",
+            "end": "1743793200"
+          }
+        ],
+        "informedEntity": [
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "SI"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "S16"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "S18"
+          }
+        ],
+        "headerText": {
+          "translation": [
+            {
+              "text": "All [SIR] trains from Huguenot to Eltingville board from the Tottenville-bound platform",
+              "language": "en"
+            },
+            {
+              "text": "<p>All [SIR] trains from <b>Huguenot</b> to <b>Eltingville</b> board from the Tottenville-bound platform</p>",
+              "language": "en-html"
+            }
+          ]
+        },
+        "descriptionText": {
+          "translation": [
+            {
+              "text": "Boarding change includes Huguenot, Annadale and Eltingville stations.\nWhat's happening?\nScheduled maintenance",
+              "language": "en"
+            },
+            {
+              "text": "<ul><li><p>Boarding change includes <b>Huguenot</b>, <b>Annadale</b> and <b>Eltingville</b> stations.</p></li></ul><p><strong>What's happening?</strong></p><p>Scheduled maintenance</p>",
+              "language": "en-html"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lmm:planned_work:23469",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1743428700",
+            "end": "1743446700"
+          }
+        ],
+        "informedEntity": [
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "SI"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "S19"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "S23"
+          }
+        ],
+        "headerText": {
+          "translation": [
+            {
+              "text": "All [SIR] trains from Grant City to Great Kills board from the St George-bound platform.",
+              "language": "en"
+            },
+            {
+              "text": "<p><strong>All </strong>[SIR]<strong> trains from </strong>\u200c<b>Grant City</b><strong> to </strong>\u200c<b>Great Kills</b><strong> board from the St George-bound platform.</strong></p>",
+              "language": "en-html"
+            }
+          ]
+        },
+        "descriptionText": {
+          "translation": [
+            {
+              "text": "Boarding change affects Grant City, New Dorp, Oakwood Heights, Bay Terrace and Great Kills stations.\nWhat's happening?\nScheduled maintenance",
+              "language": "en"
+            },
+            {
+              "text": "<ul><li><p>Boarding change affects <b>Grant City</b>, <b>New Dorp</b>, <b>Oakwood Heights</b>, <b>Bay Terrace</b> and <b>Great Kills</b> stations.</p></li></ul><p><strong>What's happening?</strong></p><p>Scheduled maintenance</p>",
+              "language": "en-html"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lmm:planned_work:23468",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1743515100",
+            "end": "1743534000"
+          },
+          {
+            "start": "1743601500",
+            "end": "1743620400"
+          },
+          {
+            "start": "1743687900",
+            "end": "1743706800"
+          }
+        ],
+        "informedEntity": [
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "SI"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "S16"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "S18"
+          }
+        ],
+        "headerText": {
+          "translation": [
+            {
+              "text": "All [SIR] trains from Eltingville to Huguenot board from the Saint George-bound platform",
+              "language": "en"
+            },
+            {
+              "text": "<p>All [SIR] trains from <b>Eltingville</b> to <b>Huguenot</b> board from the Saint George-bound platform</p>",
+              "language": "en-html"
+            }
+          ]
+        },
+        "descriptionText": {
+          "translation": [
+            {
+              "text": "Boarding change includes Eltingville, Annadale and Huguenot stations.\nWhat's happening?\nScheduled maintenance",
+              "language": "en"
+            },
+            {
+              "text": "<ul><li><p>Boarding change includes <b>Eltingville</b>, <b>Annadale</b> and <b>Huguenot</b> stations.</p></li></ul><p><strong>What's happening?</strong></p><p>Scheduled maintenance</p>",
+              "language": "en-html"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lmm:planned_work:23466",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1743559200",
+            "end": "1743580800"
+          },
+          {
+            "start": "1743645600",
+            "end": "1743667200"
+          },
+          {
+            "start": "1743732000",
+            "end": "1743753600"
+          }
+        ],
+        "informedEntity": [
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "SI"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "S27"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "S28"
+          }
+        ],
+        "headerText": {
+          "translation": [
+            {
+              "text": "All [SIR] trains from Grasmere and Clifton board from the Tottenville-bound platform",
+              "language": "en"
+            },
+            {
+              "text": "<p>All [SIR] trains from <b>Grasmere</b> and <b>Clifton</b> board from the Tottenville-bound platform</p>",
+              "language": "en-html"
+            }
+          ]
+        },
+        "descriptionText": {
+          "translation": [
+            {
+              "text": "What's happening?\nScheduled maintenance",
+              "language": "en"
+            },
+            {
+              "text": "<p><strong>What's happening?</strong></p><p>Scheduled maintenance</p>",
+              "language": "en-html"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "lmm:planned_work:23464",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1745631900",
+            "end": "1745634600"
+          },
+          {
+            "start": "1745661600",
+            "end": "1745721000"
+          },
+          {
+            "start": "1745752500",
+            "end": "1745807400"
+          }
+        ],
+        "informedEntity": [
+          {
+            "agencyId": "MTASBWY",
+            "routeId": "C"
+          },
+          {
+            "agencyId": "MTASBWY",
+            "stopId": "A51"
+          }
+        ],
+        "headerText": {
+          "translation": [
+            {
+              "text": "In Brooklyn, Manhattan-bound [C] skips Broadway Junction",
+              "language": "en"
+            },
+            {
+              "text": "<p>In Brooklyn, Manhattan-bound \u200c[C] skips <b>Broadway Junction</b></p>",
+              "language": "en-html"
+            }
+          ]
+        },
+        "descriptionText": {
+          "translation": [
+            {
+              "text": "Use nearby Rockaway Av station.\n\nFor service to this station, take the [C] to Rockaway Av and transfer to a Euclid Av-bound [C].\n\nFor service from this station, take the [C] to Euclid Av and transfer to a Manhattan-bound [C].\n\nWhat's happening?\nWe're making station improvements",
+              "language": "en"
+            },
+            {
+              "text": "<p>Use <a title=\"\" href=\"https://map.mta.info/#@40.6777082,-73.9035693,16.73z\" rel=\"noopener noreferrer nofollow\" data-link-auto=\"\" target=\"_blank\">nearby</a> <b>Rockaway Av</b> station.</p><p style=\"min-height:10px\"></p><p>For service to this station, take the \u200c[C] to <b>Rockaway Av</b> and transfer to a Euclid Av-bound [C].</p><p style=\"min-height:10px\"></p><p>For service from this station, take the \u200c[C] to <b>Euclid Av</b> and transfer to a Manhattan-bound [C].</p><p style=\"min-height:10px\"></p><p><strong>What's happening?</strong></p><p>We're making station improvements</p>",
+              "language": "en-html"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

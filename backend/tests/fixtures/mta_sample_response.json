@@ -1,0 +1,2865 @@
+{
+  "header": {
+    "gtfsRealtimeVersion": "1.0",
+    "timestamp": "1743209547"
+  },
+  "entity": [
+    {
+      "id": "000001",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "127950_3..N05X005",
+          "startDate": "20250328",
+          "routeId": "3"
+        },
+        "stopTimeUpdate": [
+          {
+            "departure": {
+              "time": "1743211170"
+            },
+            "stopId": "257N"
+          },
+          {
+            "arrival": {
+              "time": "1743211260"
+            },
+            "departure": {
+              "time": "1743211260"
+            },
+            "stopId": "256N"
+          },
+          {
+            "arrival": {
+              "time": "1743211320"
+            },
+            "departure": {
+              "time": "1743211320"
+            },
+            "stopId": "255N"
+          },
+          {
+            "arrival": {
+              "time": "1743211410"
+            },
+            "departure": {
+              "time": "1743211410"
+            },
+            "stopId": "254N"
+          },
+          {
+            "arrival": {
+              "time": "1743211470"
+            },
+            "departure": {
+              "time": "1743211470"
+            },
+            "stopId": "253N"
+          },
+          {
+            "arrival": {
+              "time": "1743211590"
+            },
+            "departure": {
+              "time": "1743211590"
+            },
+            "stopId": "252N"
+          },
+          {
+            "arrival": {
+              "time": "1743211680"
+            },
+            "departure": {
+              "time": "1743211680"
+            },
+            "stopId": "251N"
+          },
+          {
+            "arrival": {
+              "time": "1743211830"
+            },
+            "departure": {
+              "time": "1743211830"
+            },
+            "stopId": "250N"
+          },
+          {
+            "arrival": {
+              "time": "1743211950"
+            },
+            "departure": {
+              "time": "1743211950"
+            },
+            "stopId": "249N"
+          },
+          {
+            "arrival": {
+              "time": "1743212070"
+            },
+            "departure": {
+              "time": "1743212070"
+            },
+            "stopId": "248N"
+          },
+          {
+            "arrival": {
+              "time": "1743212160"
+            },
+            "departure": {
+              "time": "1743212160"
+            },
+            "stopId": "239N"
+          },
+          {
+            "arrival": {
+              "time": "1743212280"
+            },
+            "departure": {
+              "time": "1743212280"
+            },
+            "stopId": "238N"
+          },
+          {
+            "arrival": {
+              "time": "1743212370"
+            },
+            "departure": {
+              "time": "1743212370"
+            },
+            "stopId": "237N"
+          },
+          {
+            "arrival": {
+              "time": "1743212490"
+            },
+            "departure": {
+              "time": "1743212490"
+            },
+            "stopId": "236N"
+          },
+          {
+            "arrival": {
+              "time": "1743212580"
+            },
+            "departure": {
+              "time": "1743212580"
+            },
+            "stopId": "235N"
+          },
+          {
+            "arrival": {
+              "time": "1743212670"
+            },
+            "departure": {
+              "time": "1743212670"
+            },
+            "stopId": "234N"
+          },
+          {
+            "arrival": {
+              "time": "1743212760"
+            },
+            "departure": {
+              "time": "1743212760"
+            },
+            "stopId": "233N"
+          },
+          {
+            "arrival": {
+              "time": "1743212850"
+            },
+            "departure": {
+              "time": "1743212850"
+            },
+            "stopId": "232N"
+          },
+          {
+            "arrival": {
+              "time": "1743212970"
+            },
+            "departure": {
+              "time": "1743212970"
+            },
+            "stopId": "231N"
+          },
+          {
+            "arrival": {
+              "time": "1743213180"
+            },
+            "departure": {
+              "time": "1743213180"
+            },
+            "stopId": "230N"
+          },
+          {
+            "arrival": {
+              "time": "1743213240"
+            },
+            "departure": {
+              "time": "1743213240"
+            },
+            "stopId": "229N"
+          },
+          {
+            "arrival": {
+              "time": "1743213390"
+            },
+            "departure": {
+              "time": "1743213390"
+            },
+            "stopId": "228N"
+          },
+          {
+            "arrival": {
+              "time": "1743213450"
+            },
+            "departure": {
+              "time": "1743213450"
+            },
+            "stopId": "137N"
+          },
+          {
+            "arrival": {
+              "time": "1743213720"
+            },
+            "departure": {
+              "time": "1743213720"
+            },
+            "stopId": "132N"
+          },
+          {
+            "arrival": {
+              "time": "1743213870"
+            },
+            "departure": {
+              "time": "1743213870"
+            },
+            "stopId": "128N"
+          },
+          {
+            "arrival": {
+              "time": "1743213930"
+            },
+            "departure": {
+              "time": "1743213930"
+            },
+            "stopId": "127N"
+          },
+          {
+            "arrival": {
+              "time": "1743214170"
+            },
+            "departure": {
+              "time": "1743214170"
+            },
+            "stopId": "123N"
+          },
+          {
+            "arrival": {
+              "time": "1743214350"
+            },
+            "departure": {
+              "time": "1743214350"
+            },
+            "stopId": "120N"
+          },
+          {
+            "arrival": {
+              "time": "1743214440"
+            },
+            "departure": {
+              "time": "1743214440"
+            },
+            "stopId": "119N"
+          },
+          {
+            "arrival": {
+              "time": "1743214530"
+            },
+            "departure": {
+              "time": "1743214530"
+            },
+            "stopId": "118N"
+          },
+          {
+            "arrival": {
+              "time": "1743214590"
+            },
+            "departure": {
+              "time": "1743214590"
+            },
+            "stopId": "117N"
+          },
+          {
+            "arrival": {
+              "time": "1743214710"
+            },
+            "departure": {
+              "time": "1743214710"
+            },
+            "stopId": "116N"
+          },
+          {
+            "arrival": {
+              "time": "1743214830"
+            },
+            "stopId": "115N"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000002",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "121950_5..N",
+          "startDate": "20250328",
+          "routeId": "5"
+        },
+        "stopTimeUpdate": [
+          {
+            "arrival": {
+              "time": "1743209657"
+            },
+            "departure": {
+              "time": "1743209657"
+            },
+            "stopId": "228N"
+          },
+          {
+            "arrival": {
+              "time": "1743209717"
+            },
+            "departure": {
+              "time": "1743209717"
+            },
+            "stopId": "137N"
+          },
+          {
+            "arrival": {
+              "time": "1743209987"
+            },
+            "departure": {
+              "time": "1743209987"
+            },
+            "stopId": "132N"
+          },
+          {
+            "arrival": {
+              "time": "1743210167"
+            },
+            "departure": {
+              "time": "1743210167"
+            },
+            "stopId": "128N"
+          },
+          {
+            "arrival": {
+              "time": "1743210227"
+            },
+            "departure": {
+              "time": "1743210227"
+            },
+            "stopId": "127N"
+          },
+          {
+            "arrival": {
+              "time": "1743210467"
+            },
+            "departure": {
+              "time": "1743210467"
+            },
+            "stopId": "123N"
+          },
+          {
+            "arrival": {
+              "time": "1743210647"
+            },
+            "departure": {
+              "time": "1743210647"
+            },
+            "stopId": "120N"
+          },
+          {
+            "arrival": {
+              "time": "1743210947"
+            },
+            "departure": {
+              "time": "1743210947"
+            },
+            "stopId": "227N"
+          },
+          {
+            "arrival": {
+              "time": "1743211007"
+            },
+            "departure": {
+              "time": "1743211007"
+            },
+            "stopId": "226N"
+          },
+          {
+            "arrival": {
+              "time": "1743211097"
+            },
+            "departure": {
+              "time": "1743211097"
+            },
+            "stopId": "225N"
+          },
+          {
+            "arrival": {
+              "time": "1743211487"
+            },
+            "departure": {
+              "time": "1743211487"
+            },
+            "stopId": "222N"
+          },
+          {
+            "arrival": {
+              "time": "1743211607"
+            },
+            "departure": {
+              "time": "1743211607"
+            },
+            "stopId": "221N"
+          },
+          {
+            "arrival": {
+              "time": "1743211757"
+            },
+            "departure": {
+              "time": "1743211757"
+            },
+            "stopId": "220N"
+          },
+          {
+            "arrival": {
+              "time": "1743211847"
+            },
+            "departure": {
+              "time": "1743211847"
+            },
+            "stopId": "219N"
+          },
+          {
+            "arrival": {
+              "time": "1743211937"
+            },
+            "departure": {
+              "time": "1743211937"
+            },
+            "stopId": "218N"
+          },
+          {
+            "arrival": {
+              "time": "1743212027"
+            },
+            "departure": {
+              "time": "1743212027"
+            },
+            "stopId": "217N"
+          },
+          {
+            "arrival": {
+              "time": "1743212117"
+            },
+            "departure": {
+              "time": "1743212117"
+            },
+            "stopId": "216N"
+          },
+          {
+            "arrival": {
+              "time": "1743212267"
+            },
+            "departure": {
+              "time": "1743212267"
+            },
+            "stopId": "215N"
+          },
+          {
+            "arrival": {
+              "time": "1743212387"
+            },
+            "departure": {
+              "time": "1743212387"
+            },
+            "stopId": "214N"
+          },
+          {
+            "arrival": {
+              "time": "1743212477"
+            },
+            "departure": {
+              "time": "1743212477"
+            },
+            "stopId": "213N"
+          },
+          {
+            "arrival": {
+              "time": "1743212687"
+            },
+            "departure": {
+              "time": "1743212687"
+            },
+            "stopId": "505N"
+          },
+          {
+            "arrival": {
+              "time": "1743212747"
+            },
+            "departure": {
+              "time": "1743212747"
+            },
+            "stopId": "504N"
+          },
+          {
+            "arrival": {
+              "time": "1743212897"
+            },
+            "departure": {
+              "time": "1743212897"
+            },
+            "stopId": "503N"
+          },
+          {
+            "arrival": {
+              "time": "1743213047"
+            },
+            "departure": {
+              "time": "1743213047"
+            },
+            "stopId": "502N"
+          },
+          {
+            "arrival": {
+              "time": "1743213167"
+            },
+            "stopId": "501N"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000003",
+      "vehicle": {
+        "trip": {
+          "tripId": "121950_5..N",
+          "startDate": "20250328",
+          "routeId": "5"
+        },
+        "currentStopSequence": 13,
+        "timestamp": "1743209538",
+        "stopId": "228N"
+      }
+    },
+    {
+      "id": "000004",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "120250_1..N03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "stopTimeUpdate": [
+          {
+            "arrival": {
+              "time": "1743209460"
+            },
+            "departure": {
+              "time": "1743209460"
+            },
+            "stopId": "111N"
+          },
+          {
+            "arrival": {
+              "time": "1743209550"
+            },
+            "departure": {
+              "time": "1743209550"
+            },
+            "stopId": "110N"
+          },
+          {
+            "arrival": {
+              "time": "1743209640"
+            },
+            "departure": {
+              "time": "1743209640"
+            },
+            "stopId": "109N"
+          },
+          {
+            "arrival": {
+              "time": "1743209730"
+            },
+            "departure": {
+              "time": "1743209730"
+            },
+            "stopId": "108N"
+          },
+          {
+            "arrival": {
+              "time": "1743209820"
+            },
+            "departure": {
+              "time": "1743209820"
+            },
+            "stopId": "107N"
+          },
+          {
+            "arrival": {
+              "time": "1743209910"
+            },
+            "departure": {
+              "time": "1743209910"
+            },
+            "stopId": "106N"
+          },
+          {
+            "arrival": {
+              "time": "1743210000"
+            },
+            "departure": {
+              "time": "1743210000"
+            },
+            "stopId": "104N"
+          },
+          {
+            "arrival": {
+              "time": "1743210090"
+            },
+            "departure": {
+              "time": "1743210090"
+            },
+            "stopId": "103N"
+          },
+          {
+            "arrival": {
+              "time": "1743210210"
+            },
+            "stopId": "101N"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000005",
+      "vehicle": {
+        "trip": {
+          "tripId": "120250_1..N03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "currentStopSequence": 30,
+        "timestamp": "1743209340",
+        "stopId": "111N"
+      }
+    },
+    {
+      "id": "000006",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "118150_1..S03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "stopTimeUpdate": [
+          {
+            "departure": {
+              "time": "1743205290"
+            },
+            "stopId": "101S"
+          },
+          {
+            "arrival": {
+              "time": "1743205380"
+            },
+            "departure": {
+              "time": "1743205380"
+            },
+            "stopId": "103S"
+          },
+          {
+            "arrival": {
+              "time": "1743205470"
+            },
+            "departure": {
+              "time": "1743205470"
+            },
+            "stopId": "104S"
+          },
+          {
+            "arrival": {
+              "time": "1743205560"
+            },
+            "departure": {
+              "time": "1743205560"
+            },
+            "stopId": "106S"
+          },
+          {
+            "arrival": {
+              "time": "1743205650"
+            },
+            "departure": {
+              "time": "1743205650"
+            },
+            "stopId": "107S"
+          },
+          {
+            "arrival": {
+              "time": "1743205710"
+            },
+            "departure": {
+              "time": "1743205710"
+            },
+            "stopId": "108S"
+          },
+          {
+            "arrival": {
+              "time": "1743205800"
+            },
+            "departure": {
+              "time": "1743205800"
+            },
+            "stopId": "109S"
+          },
+          {
+            "arrival": {
+              "time": "1743205890"
+            },
+            "departure": {
+              "time": "1743205890"
+            },
+            "stopId": "110S"
+          },
+          {
+            "arrival": {
+              "time": "1743205980"
+            },
+            "departure": {
+              "time": "1743205980"
+            },
+            "stopId": "111S"
+          },
+          {
+            "arrival": {
+              "time": "1743206100"
+            },
+            "departure": {
+              "time": "1743206100"
+            },
+            "stopId": "112S"
+          },
+          {
+            "arrival": {
+              "time": "1743206190"
+            },
+            "departure": {
+              "time": "1743206190"
+            },
+            "stopId": "113S"
+          },
+          {
+            "arrival": {
+              "time": "1743206310"
+            },
+            "departure": {
+              "time": "1743206310"
+            },
+            "stopId": "114S"
+          },
+          {
+            "arrival": {
+              "time": "1743206400"
+            },
+            "departure": {
+              "time": "1743206400"
+            },
+            "stopId": "115S"
+          },
+          {
+            "arrival": {
+              "time": "1743206490"
+            },
+            "departure": {
+              "time": "1743206490"
+            },
+            "stopId": "116S"
+          },
+          {
+            "arrival": {
+              "time": "1743206640"
+            },
+            "departure": {
+              "time": "1743206640"
+            },
+            "stopId": "117S"
+          },
+          {
+            "arrival": {
+              "time": "1743206700"
+            },
+            "departure": {
+              "time": "1743206700"
+            },
+            "stopId": "118S"
+          },
+          {
+            "arrival": {
+              "time": "1743206760"
+            },
+            "departure": {
+              "time": "1743206760"
+            },
+            "stopId": "119S"
+          },
+          {
+            "arrival": {
+              "time": "1743206880"
+            },
+            "departure": {
+              "time": "1743206880"
+            },
+            "stopId": "120S"
+          },
+          {
+            "arrival": {
+              "time": "1743207000"
+            },
+            "departure": {
+              "time": "1743207000"
+            },
+            "stopId": "121S"
+          },
+          {
+            "arrival": {
+              "time": "1743207060"
+            },
+            "departure": {
+              "time": "1743207060"
+            },
+            "stopId": "122S"
+          },
+          {
+            "arrival": {
+              "time": "1743207150"
+            },
+            "departure": {
+              "time": "1743207150"
+            },
+            "stopId": "123S"
+          },
+          {
+            "arrival": {
+              "time": "1743207240"
+            },
+            "departure": {
+              "time": "1743207240"
+            },
+            "stopId": "124S"
+          },
+          {
+            "arrival": {
+              "time": "1743207330"
+            },
+            "departure": {
+              "time": "1743207330"
+            },
+            "stopId": "125S"
+          },
+          {
+            "arrival": {
+              "time": "1743207450"
+            },
+            "departure": {
+              "time": "1743207450"
+            },
+            "stopId": "126S"
+          },
+          {
+            "arrival": {
+              "time": "1743207540"
+            },
+            "departure": {
+              "time": "1743207540"
+            },
+            "stopId": "127S"
+          },
+          {
+            "arrival": {
+              "time": "1743207630"
+            },
+            "departure": {
+              "time": "1743207630"
+            },
+            "stopId": "128S"
+          },
+          {
+            "arrival": {
+              "time": "1743207690"
+            },
+            "departure": {
+              "time": "1743207690"
+            },
+            "stopId": "129S"
+          },
+          {
+            "arrival": {
+              "time": "1743207750"
+            },
+            "departure": {
+              "time": "1743207750"
+            },
+            "stopId": "130S"
+          },
+          {
+            "arrival": {
+              "time": "1743207810"
+            },
+            "departure": {
+              "time": "1743207810"
+            },
+            "stopId": "131S"
+          },
+          {
+            "arrival": {
+              "time": "1743207870"
+            },
+            "departure": {
+              "time": "1743207870"
+            },
+            "stopId": "132S"
+          },
+          {
+            "arrival": {
+              "time": "1743207960"
+            },
+            "departure": {
+              "time": "1743207960"
+            },
+            "stopId": "133S"
+          },
+          {
+            "arrival": {
+              "time": "1743208050"
+            },
+            "departure": {
+              "time": "1743208050"
+            },
+            "stopId": "134S"
+          },
+          {
+            "arrival": {
+              "time": "1743208170"
+            },
+            "departure": {
+              "time": "1743208170"
+            },
+            "stopId": "135S"
+          },
+          {
+            "arrival": {
+              "time": "1743208230"
+            },
+            "departure": {
+              "time": "1743208230"
+            },
+            "stopId": "136S"
+          },
+          {
+            "arrival": {
+              "time": "1743208290"
+            },
+            "departure": {
+              "time": "1743208290"
+            },
+            "stopId": "137S"
+          },
+          {
+            "arrival": {
+              "time": "1743208350"
+            },
+            "departure": {
+              "time": "1743208350"
+            },
+            "stopId": "138S"
+          },
+          {
+            "arrival": {
+              "time": "1743208440"
+            },
+            "departure": {
+              "time": "1743208440"
+            },
+            "stopId": "139S"
+          },
+          {
+            "arrival": {
+              "time": "1743208560"
+            },
+            "stopId": "142S"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000007",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "119850_1..N03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "stopTimeUpdate": [
+          {
+            "arrival": {
+              "time": "1743209572"
+            },
+            "departure": {
+              "time": "1743209572"
+            },
+            "stopId": "104N"
+          },
+          {
+            "arrival": {
+              "time": "1743209662"
+            },
+            "departure": {
+              "time": "1743209662"
+            },
+            "stopId": "103N"
+          },
+          {
+            "arrival": {
+              "time": "1743209782"
+            },
+            "stopId": "101N"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000008",
+      "vehicle": {
+        "trip": {
+          "tripId": "119850_1..N03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "currentStopSequence": 36,
+        "currentStatus": "STOPPED_AT",
+        "timestamp": "1743209542",
+        "stopId": "104N"
+      }
+    },
+    {
+      "id": "000009",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "120400_1..S03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "stopTimeUpdate": [
+          {
+            "arrival": {
+              "time": "1743209608"
+            },
+            "departure": {
+              "time": "1743209608"
+            },
+            "stopId": "134S"
+          },
+          {
+            "arrival": {
+              "time": "1743209728"
+            },
+            "departure": {
+              "time": "1743209728"
+            },
+            "stopId": "135S"
+          },
+          {
+            "arrival": {
+              "time": "1743209788"
+            },
+            "departure": {
+              "time": "1743209788"
+            },
+            "stopId": "136S"
+          },
+          {
+            "arrival": {
+              "time": "1743209848"
+            },
+            "departure": {
+              "time": "1743209848"
+            },
+            "stopId": "137S"
+          },
+          {
+            "arrival": {
+              "time": "1743209908"
+            },
+            "departure": {
+              "time": "1743209908"
+            },
+            "stopId": "138S"
+          },
+          {
+            "arrival": {
+              "time": "1743209998"
+            },
+            "departure": {
+              "time": "1743209998"
+            },
+            "stopId": "139S"
+          },
+          {
+            "arrival": {
+              "time": "1743210118"
+            },
+            "stopId": "142S"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000010",
+      "vehicle": {
+        "trip": {
+          "tripId": "120400_1..S03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "currentStopSequence": 32,
+        "timestamp": "1743209541",
+        "stopId": "134S"
+      }
+    },
+    {
+      "id": "000011",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "120650_1..N03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "stopTimeUpdate": [
+          {
+            "arrival": {
+              "time": "1743209452"
+            },
+            "departure": {
+              "time": "1743209452"
+            },
+            "stopId": "113N"
+          },
+          {
+            "arrival": {
+              "time": "1743209542"
+            },
+            "departure": {
+              "time": "1743209542"
+            },
+            "stopId": "112N"
+          },
+          {
+            "arrival": {
+              "time": "1743209662"
+            },
+            "departure": {
+              "time": "1743209662"
+            },
+            "stopId": "111N"
+          },
+          {
+            "arrival": {
+              "time": "1743209752"
+            },
+            "departure": {
+              "time": "1743209752"
+            },
+            "stopId": "110N"
+          },
+          {
+            "arrival": {
+              "time": "1743209842"
+            },
+            "departure": {
+              "time": "1743209842"
+            },
+            "stopId": "109N"
+          },
+          {
+            "arrival": {
+              "time": "1743209932"
+            },
+            "departure": {
+              "time": "1743209932"
+            },
+            "stopId": "108N"
+          },
+          {
+            "arrival": {
+              "time": "1743210022"
+            },
+            "departure": {
+              "time": "1743210022"
+            },
+            "stopId": "107N"
+          },
+          {
+            "arrival": {
+              "time": "1743210112"
+            },
+            "departure": {
+              "time": "1743210112"
+            },
+            "stopId": "106N"
+          },
+          {
+            "arrival": {
+              "time": "1743210202"
+            },
+            "departure": {
+              "time": "1743210202"
+            },
+            "stopId": "104N"
+          },
+          {
+            "arrival": {
+              "time": "1743210292"
+            },
+            "departure": {
+              "time": "1743210292"
+            },
+            "stopId": "103N"
+          },
+          {
+            "arrival": {
+              "time": "1743210412"
+            },
+            "stopId": "101N"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000012",
+      "vehicle": {
+        "trip": {
+          "tripId": "120650_1..N03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "currentStopSequence": 28,
+        "currentStatus": "STOPPED_AT",
+        "timestamp": "1743209422",
+        "stopId": "113N"
+      }
+    },
+    {
+      "id": "000013",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "121100_1..N03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "stopTimeUpdate": [
+          {
+            "arrival": {
+              "time": "1743209591"
+            },
+            "departure": {
+              "time": "1743209591"
+            },
+            "stopId": "113N"
+          },
+          {
+            "arrival": {
+              "time": "1743209681"
+            },
+            "departure": {
+              "time": "1743209681"
+            },
+            "stopId": "112N"
+          },
+          {
+            "arrival": {
+              "time": "1743209801"
+            },
+            "departure": {
+              "time": "1743209801"
+            },
+            "stopId": "111N"
+          },
+          {
+            "arrival": {
+              "time": "1743209891"
+            },
+            "departure": {
+              "time": "1743209891"
+            },
+            "stopId": "110N"
+          },
+          {
+            "arrival": {
+              "time": "1743209981"
+            },
+            "departure": {
+              "time": "1743209981"
+            },
+            "stopId": "109N"
+          },
+          {
+            "arrival": {
+              "time": "1743210071"
+            },
+            "departure": {
+              "time": "1743210071"
+            },
+            "stopId": "108N"
+          },
+          {
+            "arrival": {
+              "time": "1743210161"
+            },
+            "departure": {
+              "time": "1743210161"
+            },
+            "stopId": "107N"
+          },
+          {
+            "arrival": {
+              "time": "1743210251"
+            },
+            "departure": {
+              "time": "1743210251"
+            },
+            "stopId": "106N"
+          },
+          {
+            "arrival": {
+              "time": "1743210341"
+            },
+            "departure": {
+              "time": "1743210341"
+            },
+            "stopId": "104N"
+          },
+          {
+            "arrival": {
+              "time": "1743210431"
+            },
+            "departure": {
+              "time": "1743210431"
+            },
+            "stopId": "103N"
+          },
+          {
+            "arrival": {
+              "time": "1743210551"
+            },
+            "stopId": "101N"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000014",
+      "vehicle": {
+        "trip": {
+          "tripId": "121100_1..N03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "currentStopSequence": 28,
+        "timestamp": "1743209527",
+        "stopId": "113N"
+      }
+    },
+    {
+      "id": "000015",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "121300_1..S03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "stopTimeUpdate": [
+          {
+            "arrival": {
+              "time": "1743209537"
+            },
+            "departure": {
+              "time": "1743209537"
+            },
+            "stopId": "128S"
+          },
+          {
+            "arrival": {
+              "time": "1743209597"
+            },
+            "departure": {
+              "time": "1743209597"
+            },
+            "stopId": "129S"
+          },
+          {
+            "arrival": {
+              "time": "1743209657"
+            },
+            "departure": {
+              "time": "1743209657"
+            },
+            "stopId": "130S"
+          },
+          {
+            "arrival": {
+              "time": "1743209717"
+            },
+            "departure": {
+              "time": "1743209717"
+            },
+            "stopId": "131S"
+          },
+          {
+            "arrival": {
+              "time": "1743209777"
+            },
+            "departure": {
+              "time": "1743209777"
+            },
+            "stopId": "132S"
+          },
+          {
+            "arrival": {
+              "time": "1743209867"
+            },
+            "departure": {
+              "time": "1743209867"
+            },
+            "stopId": "133S"
+          },
+          {
+            "arrival": {
+              "time": "1743209957"
+            },
+            "departure": {
+              "time": "1743209957"
+            },
+            "stopId": "134S"
+          },
+          {
+            "arrival": {
+              "time": "1743210077"
+            },
+            "departure": {
+              "time": "1743210077"
+            },
+            "stopId": "135S"
+          },
+          {
+            "arrival": {
+              "time": "1743210137"
+            },
+            "departure": {
+              "time": "1743210137"
+            },
+            "stopId": "136S"
+          },
+          {
+            "arrival": {
+              "time": "1743210197"
+            },
+            "departure": {
+              "time": "1743210197"
+            },
+            "stopId": "137S"
+          },
+          {
+            "arrival": {
+              "time": "1743210257"
+            },
+            "departure": {
+              "time": "1743210257"
+            },
+            "stopId": "138S"
+          },
+          {
+            "arrival": {
+              "time": "1743210347"
+            },
+            "departure": {
+              "time": "1743210347"
+            },
+            "stopId": "139S"
+          },
+          {
+            "arrival": {
+              "time": "1743210467"
+            },
+            "stopId": "142S"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000016",
+      "vehicle": {
+        "trip": {
+          "tripId": "121300_1..S03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "currentStopSequence": 26,
+        "currentStatus": "STOPPED_AT",
+        "timestamp": "1743209507",
+        "stopId": "128S"
+      }
+    },
+    {
+      "id": "000017",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "121550_1..N03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "stopTimeUpdate": [
+          {
+            "arrival": {
+              "time": "1743209623"
+            },
+            "departure": {
+              "time": "1743209623"
+            },
+            "stopId": "115N"
+          },
+          {
+            "arrival": {
+              "time": "1743209713"
+            },
+            "departure": {
+              "time": "1743209713"
+            },
+            "stopId": "114N"
+          },
+          {
+            "arrival": {
+              "time": "1743209833"
+            },
+            "departure": {
+              "time": "1743209833"
+            },
+            "stopId": "113N"
+          },
+          {
+            "arrival": {
+              "time": "1743209923"
+            },
+            "departure": {
+              "time": "1743209983"
+            },
+            "stopId": "112N"
+          },
+          {
+            "arrival": {
+              "time": "1743210103"
+            },
+            "departure": {
+              "time": "1743210103"
+            },
+            "stopId": "111N"
+          },
+          {
+            "arrival": {
+              "time": "1743210193"
+            },
+            "departure": {
+              "time": "1743210193"
+            },
+            "stopId": "110N"
+          },
+          {
+            "arrival": {
+              "time": "1743210283"
+            },
+            "departure": {
+              "time": "1743210283"
+            },
+            "stopId": "109N"
+          },
+          {
+            "arrival": {
+              "time": "1743210373"
+            },
+            "departure": {
+              "time": "1743210373"
+            },
+            "stopId": "108N"
+          },
+          {
+            "arrival": {
+              "time": "1743210463"
+            },
+            "departure": {
+              "time": "1743210463"
+            },
+            "stopId": "107N"
+          },
+          {
+            "arrival": {
+              "time": "1743210553"
+            },
+            "departure": {
+              "time": "1743210553"
+            },
+            "stopId": "106N"
+          },
+          {
+            "arrival": {
+              "time": "1743210643"
+            },
+            "departure": {
+              "time": "1743210643"
+            },
+            "stopId": "104N"
+          },
+          {
+            "arrival": {
+              "time": "1743210733"
+            },
+            "departure": {
+              "time": "1743210733"
+            },
+            "stopId": "103N"
+          },
+          {
+            "arrival": {
+              "time": "1743210853"
+            },
+            "stopId": "101N"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000018",
+      "vehicle": {
+        "trip": {
+          "tripId": "121550_1..N03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "currentStopSequence": 26,
+        "timestamp": "1743209533",
+        "stopId": "115N"
+      }
+    },
+    {
+      "id": "000019",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "122000_1..N",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "stopTimeUpdate": [
+          {
+            "arrival": {
+              "time": "1743209567"
+            },
+            "departure": {
+              "time": "1743209567"
+            },
+            "stopId": "118N"
+          },
+          {
+            "arrival": {
+              "time": "1743209627"
+            },
+            "departure": {
+              "time": "1743209627"
+            },
+            "stopId": "117N"
+          },
+          {
+            "arrival": {
+              "time": "1743209777"
+            },
+            "departure": {
+              "time": "1743209777"
+            },
+            "stopId": "116N"
+          },
+          {
+            "arrival": {
+              "time": "1743209867"
+            },
+            "departure": {
+              "time": "1743209867"
+            },
+            "stopId": "115N"
+          },
+          {
+            "arrival": {
+              "time": "1743209957"
+            },
+            "departure": {
+              "time": "1743209957"
+            },
+            "stopId": "114N"
+          },
+          {
+            "arrival": {
+              "time": "1743210077"
+            },
+            "departure": {
+              "time": "1743210077"
+            },
+            "stopId": "113N"
+          },
+          {
+            "arrival": {
+              "time": "1743210167"
+            },
+            "departure": {
+              "time": "1743210167"
+            },
+            "stopId": "112N"
+          },
+          {
+            "arrival": {
+              "time": "1743210287"
+            },
+            "departure": {
+              "time": "1743210287"
+            },
+            "stopId": "111N"
+          },
+          {
+            "arrival": {
+              "time": "1743210377"
+            },
+            "departure": {
+              "time": "1743210377"
+            },
+            "stopId": "110N"
+          },
+          {
+            "arrival": {
+              "time": "1743210467"
+            },
+            "departure": {
+              "time": "1743210467"
+            },
+            "stopId": "109N"
+          },
+          {
+            "arrival": {
+              "time": "1743210557"
+            },
+            "departure": {
+              "time": "1743210557"
+            },
+            "stopId": "108N"
+          },
+          {
+            "arrival": {
+              "time": "1743210617"
+            },
+            "departure": {
+              "time": "1743210617"
+            },
+            "stopId": "107N"
+          },
+          {
+            "arrival": {
+              "time": "1743210707"
+            },
+            "departure": {
+              "time": "1743210707"
+            },
+            "stopId": "106N"
+          },
+          {
+            "arrival": {
+              "time": "1743210797"
+            },
+            "departure": {
+              "time": "1743210797"
+            },
+            "stopId": "104N"
+          },
+          {
+            "arrival": {
+              "time": "1743210887"
+            },
+            "departure": {
+              "time": "1743210887"
+            },
+            "stopId": "103N"
+          },
+          {
+            "arrival": {
+              "time": "1743211007"
+            },
+            "stopId": "101N"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000020",
+      "vehicle": {
+        "trip": {
+          "tripId": "122000_1..N",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "currentStopSequence": 23,
+        "currentStatus": "STOPPED_AT",
+        "timestamp": "1743209537",
+        "stopId": "118N"
+      }
+    },
+    {
+      "id": "000021",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "122250_1..S03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "stopTimeUpdate": [
+          {
+            "arrival": {
+              "time": "1743209548"
+            },
+            "departure": {
+              "time": "1743209548"
+            },
+            "stopId": "121S"
+          },
+          {
+            "arrival": {
+              "time": "1743209608"
+            },
+            "departure": {
+              "time": "1743209608"
+            },
+            "stopId": "122S"
+          },
+          {
+            "arrival": {
+              "time": "1743209698"
+            },
+            "departure": {
+              "time": "1743209698"
+            },
+            "stopId": "123S"
+          },
+          {
+            "arrival": {
+              "time": "1743209788"
+            },
+            "departure": {
+              "time": "1743209788"
+            },
+            "stopId": "124S"
+          },
+          {
+            "arrival": {
+              "time": "1743209878"
+            },
+            "departure": {
+              "time": "1743209878"
+            },
+            "stopId": "125S"
+          },
+          {
+            "arrival": {
+              "time": "1743209998"
+            },
+            "departure": {
+              "time": "1743209998"
+            },
+            "stopId": "126S"
+          },
+          {
+            "arrival": {
+              "time": "1743210088"
+            },
+            "departure": {
+              "time": "1743210088"
+            },
+            "stopId": "127S"
+          },
+          {
+            "arrival": {
+              "time": "1743210178"
+            },
+            "departure": {
+              "time": "1743210178"
+            },
+            "stopId": "128S"
+          },
+          {
+            "arrival": {
+              "time": "1743210238"
+            },
+            "departure": {
+              "time": "1743210238"
+            },
+            "stopId": "129S"
+          },
+          {
+            "arrival": {
+              "time": "1743210298"
+            },
+            "departure": {
+              "time": "1743210298"
+            },
+            "stopId": "130S"
+          },
+          {
+            "arrival": {
+              "time": "1743210358"
+            },
+            "departure": {
+              "time": "1743210358"
+            },
+            "stopId": "131S"
+          },
+          {
+            "arrival": {
+              "time": "1743210418"
+            },
+            "departure": {
+              "time": "1743210418"
+            },
+            "stopId": "132S"
+          },
+          {
+            "arrival": {
+              "time": "1743210508"
+            },
+            "departure": {
+              "time": "1743210508"
+            },
+            "stopId": "133S"
+          },
+          {
+            "arrival": {
+              "time": "1743210598"
+            },
+            "departure": {
+              "time": "1743210598"
+            },
+            "stopId": "134S"
+          },
+          {
+            "arrival": {
+              "time": "1743210718"
+            },
+            "departure": {
+              "time": "1743210718"
+            },
+            "stopId": "135S"
+          },
+          {
+            "arrival": {
+              "time": "1743210778"
+            },
+            "departure": {
+              "time": "1743210778"
+            },
+            "stopId": "136S"
+          },
+          {
+            "arrival": {
+              "time": "1743210838"
+            },
+            "departure": {
+              "time": "1743210838"
+            },
+            "stopId": "137S"
+          },
+          {
+            "arrival": {
+              "time": "1743210898"
+            },
+            "departure": {
+              "time": "1743210898"
+            },
+            "stopId": "138S"
+          },
+          {
+            "arrival": {
+              "time": "1743210988"
+            },
+            "departure": {
+              "time": "1743210988"
+            },
+            "stopId": "139S"
+          },
+          {
+            "arrival": {
+              "time": "1743211108"
+            },
+            "stopId": "142S"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000022",
+      "vehicle": {
+        "trip": {
+          "tripId": "122250_1..S03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "currentStopSequence": 19,
+        "currentStatus": "STOPPED_AT",
+        "timestamp": "1743209518",
+        "stopId": "121S"
+      }
+    },
+    {
+      "id": "000023",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "122450_1..N",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "stopTimeUpdate": [
+          {
+            "arrival": {
+              "time": "1743209609"
+            },
+            "departure": {
+              "time": "1743209609"
+            },
+            "stopId": "120N"
+          },
+          {
+            "arrival": {
+              "time": "1743209699"
+            },
+            "departure": {
+              "time": "1743209699"
+            },
+            "stopId": "119N"
+          },
+          {
+            "arrival": {
+              "time": "1743209759"
+            },
+            "departure": {
+              "time": "1743209759"
+            },
+            "stopId": "118N"
+          },
+          {
+            "arrival": {
+              "time": "1743209819"
+            },
+            "departure": {
+              "time": "1743209819"
+            },
+            "stopId": "117N"
+          },
+          {
+            "arrival": {
+              "time": "1743209969"
+            },
+            "departure": {
+              "time": "1743209969"
+            },
+            "stopId": "116N"
+          },
+          {
+            "arrival": {
+              "time": "1743210059"
+            },
+            "departure": {
+              "time": "1743210059"
+            },
+            "stopId": "115N"
+          },
+          {
+            "arrival": {
+              "time": "1743210149"
+            },
+            "departure": {
+              "time": "1743210149"
+            },
+            "stopId": "114N"
+          },
+          {
+            "arrival": {
+              "time": "1743210269"
+            },
+            "departure": {
+              "time": "1743210269"
+            },
+            "stopId": "113N"
+          },
+          {
+            "arrival": {
+              "time": "1743210359"
+            },
+            "departure": {
+              "time": "1743210359"
+            },
+            "stopId": "112N"
+          },
+          {
+            "arrival": {
+              "time": "1743210479"
+            },
+            "departure": {
+              "time": "1743210479"
+            },
+            "stopId": "111N"
+          },
+          {
+            "arrival": {
+              "time": "1743210569"
+            },
+            "departure": {
+              "time": "1743210569"
+            },
+            "stopId": "110N"
+          },
+          {
+            "arrival": {
+              "time": "1743210659"
+            },
+            "departure": {
+              "time": "1743210659"
+            },
+            "stopId": "109N"
+          },
+          {
+            "arrival": {
+              "time": "1743210749"
+            },
+            "departure": {
+              "time": "1743210749"
+            },
+            "stopId": "108N"
+          },
+          {
+            "arrival": {
+              "time": "1743210839"
+            },
+            "stopId": "107N"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000024",
+      "vehicle": {
+        "trip": {
+          "tripId": "122450_1..N",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "currentStopSequence": 21,
+        "timestamp": "1743209519",
+        "stopId": "120N"
+      }
+    },
+    {
+      "id": "000025",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "122750_1..S03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "stopTimeUpdate": [
+          {
+            "arrival": {
+              "time": "1743209552"
+            },
+            "departure": {
+              "time": "1743209552"
+            },
+            "stopId": "119S"
+          },
+          {
+            "arrival": {
+              "time": "1743209672"
+            },
+            "departure": {
+              "time": "1743209672"
+            },
+            "stopId": "120S"
+          },
+          {
+            "arrival": {
+              "time": "1743209792"
+            },
+            "departure": {
+              "time": "1743209792"
+            },
+            "stopId": "121S"
+          },
+          {
+            "arrival": {
+              "time": "1743209852"
+            },
+            "departure": {
+              "time": "1743209852"
+            },
+            "stopId": "122S"
+          },
+          {
+            "arrival": {
+              "time": "1743209942"
+            },
+            "departure": {
+              "time": "1743209942"
+            },
+            "stopId": "123S"
+          },
+          {
+            "arrival": {
+              "time": "1743210032"
+            },
+            "departure": {
+              "time": "1743210032"
+            },
+            "stopId": "124S"
+          },
+          {
+            "arrival": {
+              "time": "1743210122"
+            },
+            "departure": {
+              "time": "1743210122"
+            },
+            "stopId": "125S"
+          },
+          {
+            "arrival": {
+              "time": "1743210242"
+            },
+            "departure": {
+              "time": "1743210242"
+            },
+            "stopId": "126S"
+          },
+          {
+            "arrival": {
+              "time": "1743210332"
+            },
+            "departure": {
+              "time": "1743210332"
+            },
+            "stopId": "127S"
+          },
+          {
+            "arrival": {
+              "time": "1743210422"
+            },
+            "departure": {
+              "time": "1743210422"
+            },
+            "stopId": "128S"
+          },
+          {
+            "arrival": {
+              "time": "1743210482"
+            },
+            "departure": {
+              "time": "1743210482"
+            },
+            "stopId": "129S"
+          },
+          {
+            "arrival": {
+              "time": "1743210542"
+            },
+            "departure": {
+              "time": "1743210542"
+            },
+            "stopId": "130S"
+          },
+          {
+            "arrival": {
+              "time": "1743210602"
+            },
+            "departure": {
+              "time": "1743210602"
+            },
+            "stopId": "131S"
+          },
+          {
+            "arrival": {
+              "time": "1743210662"
+            },
+            "departure": {
+              "time": "1743210662"
+            },
+            "stopId": "132S"
+          },
+          {
+            "arrival": {
+              "time": "1743210752"
+            },
+            "departure": {
+              "time": "1743210752"
+            },
+            "stopId": "133S"
+          },
+          {
+            "arrival": {
+              "time": "1743210842"
+            },
+            "departure": {
+              "time": "1743210842"
+            },
+            "stopId": "134S"
+          },
+          {
+            "arrival": {
+              "time": "1743210962"
+            },
+            "departure": {
+              "time": "1743210962"
+            },
+            "stopId": "135S"
+          },
+          {
+            "arrival": {
+              "time": "1743211022"
+            },
+            "departure": {
+              "time": "1743211022"
+            },
+            "stopId": "136S"
+          },
+          {
+            "arrival": {
+              "time": "1743211082"
+            },
+            "departure": {
+              "time": "1743211082"
+            },
+            "stopId": "137S"
+          },
+          {
+            "arrival": {
+              "time": "1743211142"
+            },
+            "departure": {
+              "time": "1743211142"
+            },
+            "stopId": "138S"
+          },
+          {
+            "arrival": {
+              "time": "1743211232"
+            },
+            "departure": {
+              "time": "1743211232"
+            },
+            "stopId": "139S"
+          },
+          {
+            "arrival": {
+              "time": "1743211352"
+            },
+            "stopId": "142S"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000026",
+      "vehicle": {
+        "trip": {
+          "tripId": "122750_1..S03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "currentStopSequence": 17,
+        "currentStatus": "STOPPED_AT",
+        "timestamp": "1743209522",
+        "stopId": "119S"
+      }
+    },
+    {
+      "id": "000027",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "122900_1..N03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "stopTimeUpdate": [
+          {
+            "arrival": {
+              "time": "1743209583"
+            },
+            "departure": {
+              "time": "1743209583"
+            },
+            "stopId": "123N"
+          },
+          {
+            "arrival": {
+              "time": "1743209673"
+            },
+            "departure": {
+              "time": "1743209673"
+            },
+            "stopId": "122N"
+          },
+          {
+            "arrival": {
+              "time": "1743209763"
+            },
+            "departure": {
+              "time": "1743209763"
+            },
+            "stopId": "121N"
+          },
+          {
+            "arrival": {
+              "time": "1743209853"
+            },
+            "departure": {
+              "time": "1743209853"
+            },
+            "stopId": "120N"
+          },
+          {
+            "arrival": {
+              "time": "1743209943"
+            },
+            "departure": {
+              "time": "1743209943"
+            },
+            "stopId": "119N"
+          },
+          {
+            "arrival": {
+              "time": "1743210003"
+            },
+            "departure": {
+              "time": "1743210003"
+            },
+            "stopId": "118N"
+          },
+          {
+            "arrival": {
+              "time": "1743210063"
+            },
+            "departure": {
+              "time": "1743210063"
+            },
+            "stopId": "117N"
+          },
+          {
+            "arrival": {
+              "time": "1743210213"
+            },
+            "departure": {
+              "time": "1743210213"
+            },
+            "stopId": "116N"
+          },
+          {
+            "arrival": {
+              "time": "1743210303"
+            },
+            "departure": {
+              "time": "1743210303"
+            },
+            "stopId": "115N"
+          },
+          {
+            "arrival": {
+              "time": "1743210393"
+            },
+            "departure": {
+              "time": "1743210393"
+            },
+            "stopId": "114N"
+          },
+          {
+            "arrival": {
+              "time": "1743210513"
+            },
+            "departure": {
+              "time": "1743210513"
+            },
+            "stopId": "113N"
+          },
+          {
+            "arrival": {
+              "time": "1743210603"
+            },
+            "departure": {
+              "time": "1743210603"
+            },
+            "stopId": "112N"
+          },
+          {
+            "arrival": {
+              "time": "1743210723"
+            },
+            "departure": {
+              "time": "1743210723"
+            },
+            "stopId": "111N"
+          },
+          {
+            "arrival": {
+              "time": "1743210813"
+            },
+            "departure": {
+              "time": "1743210813"
+            },
+            "stopId": "110N"
+          },
+          {
+            "arrival": {
+              "time": "1743210903"
+            },
+            "departure": {
+              "time": "1743210903"
+            },
+            "stopId": "109N"
+          },
+          {
+            "arrival": {
+              "time": "1743210993"
+            },
+            "departure": {
+              "time": "1743210993"
+            },
+            "stopId": "108N"
+          },
+          {
+            "arrival": {
+              "time": "1743211083"
+            },
+            "departure": {
+              "time": "1743211083"
+            },
+            "stopId": "107N"
+          },
+          {
+            "arrival": {
+              "time": "1743211173"
+            },
+            "departure": {
+              "time": "1743211173"
+            },
+            "stopId": "106N"
+          },
+          {
+            "arrival": {
+              "time": "1743211263"
+            },
+            "departure": {
+              "time": "1743211263"
+            },
+            "stopId": "104N"
+          },
+          {
+            "arrival": {
+              "time": "1743211353"
+            },
+            "departure": {
+              "time": "1743211353"
+            },
+            "stopId": "103N"
+          },
+          {
+            "arrival": {
+              "time": "1743211473"
+            },
+            "stopId": "101N"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000028",
+      "vehicle": {
+        "trip": {
+          "tripId": "122900_1..N03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "currentStopSequence": 18,
+        "currentStatus": "INCOMING_AT",
+        "timestamp": "1743209543",
+        "stopId": "123N"
+      }
+    },
+    {
+      "id": "000029",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "123350_1..S03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "stopTimeUpdate": [
+          {
+            "arrival": {
+              "time": "1743209602"
+            },
+            "departure": {
+              "time": "1743209602"
+            },
+            "stopId": "116S"
+          },
+          {
+            "arrival": {
+              "time": "1743209752"
+            },
+            "departure": {
+              "time": "1743209752"
+            },
+            "stopId": "117S"
+          },
+          {
+            "arrival": {
+              "time": "1743209812"
+            },
+            "departure": {
+              "time": "1743209812"
+            },
+            "stopId": "118S"
+          },
+          {
+            "arrival": {
+              "time": "1743209872"
+            },
+            "departure": {
+              "time": "1743209872"
+            },
+            "stopId": "119S"
+          },
+          {
+            "arrival": {
+              "time": "1743209992"
+            },
+            "departure": {
+              "time": "1743209992"
+            },
+            "stopId": "120S"
+          },
+          {
+            "arrival": {
+              "time": "1743210112"
+            },
+            "departure": {
+              "time": "1743210112"
+            },
+            "stopId": "121S"
+          },
+          {
+            "arrival": {
+              "time": "1743210172"
+            },
+            "departure": {
+              "time": "1743210172"
+            },
+            "stopId": "122S"
+          },
+          {
+            "arrival": {
+              "time": "1743210262"
+            },
+            "departure": {
+              "time": "1743210262"
+            },
+            "stopId": "123S"
+          },
+          {
+            "arrival": {
+              "time": "1743210352"
+            },
+            "departure": {
+              "time": "1743210352"
+            },
+            "stopId": "124S"
+          },
+          {
+            "arrival": {
+              "time": "1743210442"
+            },
+            "departure": {
+              "time": "1743210442"
+            },
+            "stopId": "125S"
+          },
+          {
+            "arrival": {
+              "time": "1743210562"
+            },
+            "departure": {
+              "time": "1743210562"
+            },
+            "stopId": "126S"
+          },
+          {
+            "arrival": {
+              "time": "1743210652"
+            },
+            "departure": {
+              "time": "1743210652"
+            },
+            "stopId": "127S"
+          },
+          {
+            "arrival": {
+              "time": "1743210742"
+            },
+            "departure": {
+              "time": "1743210742"
+            },
+            "stopId": "128S"
+          },
+          {
+            "arrival": {
+              "time": "1743210802"
+            },
+            "departure": {
+              "time": "1743210802"
+            },
+            "stopId": "129S"
+          },
+          {
+            "arrival": {
+              "time": "1743210862"
+            },
+            "departure": {
+              "time": "1743210862"
+            },
+            "stopId": "130S"
+          },
+          {
+            "arrival": {
+              "time": "1743210922"
+            },
+            "departure": {
+              "time": "1743210922"
+            },
+            "stopId": "131S"
+          },
+          {
+            "arrival": {
+              "time": "1743210982"
+            },
+            "departure": {
+              "time": "1743210982"
+            },
+            "stopId": "132S"
+          },
+          {
+            "arrival": {
+              "time": "1743211072"
+            },
+            "departure": {
+              "time": "1743211072"
+            },
+            "stopId": "133S"
+          },
+          {
+            "arrival": {
+              "time": "1743211162"
+            },
+            "departure": {
+              "time": "1743211162"
+            },
+            "stopId": "134S"
+          },
+          {
+            "arrival": {
+              "time": "1743211282"
+            },
+            "departure": {
+              "time": "1743211282"
+            },
+            "stopId": "135S"
+          },
+          {
+            "arrival": {
+              "time": "1743211342"
+            },
+            "departure": {
+              "time": "1743211342"
+            },
+            "stopId": "136S"
+          },
+          {
+            "arrival": {
+              "time": "1743211402"
+            },
+            "departure": {
+              "time": "1743211402"
+            },
+            "stopId": "137S"
+          },
+          {
+            "arrival": {
+              "time": "1743211462"
+            },
+            "departure": {
+              "time": "1743211462"
+            },
+            "stopId": "138S"
+          },
+          {
+            "arrival": {
+              "time": "1743211552"
+            },
+            "departure": {
+              "time": "1743211552"
+            },
+            "stopId": "139S"
+          },
+          {
+            "arrival": {
+              "time": "1743211672"
+            },
+            "stopId": "142S"
+          }
+        ]
+      }
+    },
+    {
+      "id": "000030",
+      "vehicle": {
+        "trip": {
+          "tripId": "123350_1..S03R",
+          "startDate": "20250328",
+          "routeId": "1"
+        },
+        "currentStopSequence": 14,
+        "currentStatus": "INCOMING_AT",
+        "timestamp": "1743209541",
+        "stopId": "116S"
+      }
+    }
+  ]
+}
