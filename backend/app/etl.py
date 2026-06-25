@@ -25,7 +25,7 @@ from nyct_gtfs import NYCTFeed
 
 from app.extensions import db
 from app.mta_alerts import fetch_alerts_feed_dict, parse_alerts_feed_dict
-from app.models import IngestRun, RouteSegment, ServiceAlert, Station, VehicleSnapshot
+from app.models import IngestRun, RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +34,8 @@ logger = logging.getLogger(__name__)
 FEED_GROUPS = ["1", "A", "B", "G", "J", "N", "L", "SI"]
 
 _STOPS_TXT_PATH = os.path.join(os.path.dirname(__file__), "data", "stops.txt")
+_TRIPS_TXT_PATH = os.path.join(os.path.dirname(__file__), "data", "trips.txt")
+_SHAPES_TXT_PATH = os.path.join(os.path.dirname(__file__), "data", "shapes.txt")
 
 _child_to_parent_cache: dict[str, str] | None = None
 
@@ -111,6 +113,50 @@ def seed_stations() -> int:
                     )
                 )
                 inserted += 1
+
+    db.session.commit()
+    return inserted
+
+
+def seed_shapes() -> int:
+    """Idempotently load route polylines from the bundled shapes.txt + trips.txt.
+    Each GTFS shape_id becomes one RouteShape row. Safe to call on every startup.
+    """
+    import json
+
+    if RouteShape.query.count() > 0:
+        return 0
+
+    # Build shape_id -> route_id from trips.txt (take first occurrence)
+    shape_to_route: dict[str, str] = {}
+    with open(_TRIPS_TXT_PATH, newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            sid = row.get("shape_id", "").strip()
+            rid = row.get("route_id", "").strip()
+            if sid and rid and sid not in shape_to_route:
+                shape_to_route[sid] = rid
+
+    # Build shape_id -> ordered list of [lat, lon] from shapes.txt
+    shape_points: dict[str, list[tuple[int, float, float]]] = {}
+    with open(_SHAPES_TXT_PATH, newline="", encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            sid = row.get("shape_id", "").strip()
+            if sid not in shape_to_route:
+                continue
+            seq = int(row["shape_pt_sequence"])
+            lat = float(row["shape_pt_lat"])
+            lon = float(row["shape_pt_lon"])
+            shape_points.setdefault(sid, []).append((seq, lat, lon))
+
+    inserted = 0
+    for shape_id, route_id in shape_to_route.items():
+        pts = shape_points.get(shape_id)
+        if not pts:
+            continue
+        pts.sort(key=lambda t: t[0])
+        points_json = json.dumps([[lat, lon] for _, lat, lon in pts])
+        db.session.add(RouteShape(shape_id=shape_id, route_id=route_id, points_json=points_json))
+        inserted += 1
 
     db.session.commit()
     return inserted

@@ -11,7 +11,7 @@ import {
   TileLayer,
 } from "react-leaflet";
 import { routeColorVar, routeTextColor } from "../lib/routeColors";
-import type { RouteSegment, ServiceAlert, Station, VehicleSnapshot } from "../types";
+import type { RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot } from "../types";
 import { RouteBullet } from "./RouteBullet";
 
 const NYC_CENTER: [number, number] = [40.7128, -73.94];
@@ -21,6 +21,7 @@ interface TransitMapProps {
   vehicles: VehicleSnapshot[];
   alerts: ServiceAlert[];
   segments: RouteSegment[];
+  shapes: RouteShape[];
 }
 
 /** Multiple trains can be "at" the same station simultaneously (different
@@ -52,7 +53,7 @@ function vehicleIcon(routeId: string, hasDelay: boolean): L.DivIcon {
   });
 }
 
-export function TransitMap({ stations, vehicles, alerts, segments }: TransitMapProps) {
+export function TransitMap({ stations, vehicles, alerts, segments, shapes }: TransitMapProps) {
   const vehiclesByStop = useMemo(() => {
     const map = new Map<string, VehicleSnapshot[]>();
     for (const vehicle of vehicles) {
@@ -94,17 +95,20 @@ export function TransitMap({ stations, vehicles, alerts, segments }: TransitMapP
       <LayersControl position="topright">
         <LayersControl.Overlay name="Lines" checked>
           <LayerGroup>
-            {segments.map((segment) => (
+            {(shapes.length > 0 ? shapes : segments.map((s) => ({
+              route_id: s.route_id,
+              shape_id: `${s.route_id}-${s.a.stop_id}-${s.b.stop_id}`,
+              points: [[s.a.lat, s.a.lon], [s.b.lat, s.b.lon]] as [number, number][],
+            }))).map((shape) => (
               <Polyline
-                key={`${segment.route_id}-${segment.a.stop_id}-${segment.b.stop_id}`}
-                positions={[
-                  [segment.a.lat, segment.a.lon],
-                  [segment.b.lat, segment.b.lon],
-                ]}
+                key={shape.shape_id}
+                positions={shape.points}
                 pathOptions={{
-                  color: routeColorVar(segment.route_id),
-                  weight: 2,
-                  opacity: 0.6,
+                  color: routeColorVar(shape.route_id),
+                  weight: 3,
+                  opacity: 0.85,
+                  lineCap: "round",
+                  lineJoin: "round",
                 }}
               />
             ))}

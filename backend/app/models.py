@@ -122,6 +122,29 @@ class RouteSegment(db.Model):
         }
 
 
+class RouteShape(db.Model):
+    """One GTFS shape (a continuous polyline of lat/lon points) for a subway
+    route, seeded once from the MTA static shapes.txt + trips.txt files.
+    Multiple shapes per route are normal -- each direction/variant gets its
+    own shape_id and row.
+    """
+
+    __tablename__ = "route_shapes"
+
+    shape_id = db.Column(db.String(64), primary_key=True)
+    route_id = db.Column(db.String(8), nullable=False, index=True)
+    points_json = db.Column(db.Text, nullable=False)  # JSON [[lat, lon], ...]
+
+    def to_dict(self) -> dict:
+        import json
+
+        return {
+            "route_id": self.route_id,
+            "shape_id": self.shape_id,
+            "points": json.loads(self.points_json),
+        }
+
+
 class IngestRun(db.Model):
     """Observability log for the ETL pipeline -- proof the background job is
     actually running, and a place to see failures without reading server logs.
