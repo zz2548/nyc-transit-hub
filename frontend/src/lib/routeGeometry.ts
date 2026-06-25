@@ -117,6 +117,50 @@ export function shapePointsForVehicle(
   ).points;
 }
 
+/**
+ * Clean a GTFS shape polyline before passing it to leaflet-polylineoffset.
+ * The plugin uses miter joins: at near-180° direction reversals the miter
+ * vertex is projected essentially to infinity, producing huge visible loops.
+ *
+ * Two passes:
+ *  1. Remove consecutive duplicate / near-duplicate points (< 4 m apart).
+ *     Clusters of nearly-identical points at terminals cause degenerate segments.
+ *  2. Remove any interior vertex whose turn angle exceeds 155°. At that angle
+ *     the miter ratio is ~1/sin(12.5°) ≈ 4.6, meaning a 10 px offset becomes a
+ *     46 px spike that renders as a visible loop.
+ */
+export function preprocessShape(points: [number, number][]): [number, number][] {
+  if (points.length < 2) return points;
+
+  // Pass 1 – de-duplicate
+  const MIN_SEP = 0.000036; // ≈ 4 m in degrees
+  const deduped: [number, number][] = [points[0]];
+  for (let i = 1; i < points.length; i++) {
+    const prev = deduped[deduped.length - 1];
+    if (Math.hypot(points[i][0] - prev[0], points[i][1] - prev[1]) > MIN_SEP) {
+      deduped.push(points[i]);
+    }
+  }
+
+  // Pass 2 – remove near-U-turn vertices
+  if (deduped.length < 3) return deduped;
+  const MAX_TURN_DEG = 155;
+  const result: [number, number][] = [deduped[0]];
+  for (let i = 1; i < deduped.length - 1; i++) {
+    const ax = deduped[i - 1][1], ay = deduped[i - 1][0];
+    const bx = deduped[i][1],     by = deduped[i][0];
+    const cx = deduped[i + 1][1], cy = deduped[i + 1][0];
+    const abAng = Math.atan2(by - ay, bx - ax);
+    const bcAng = Math.atan2(cy - by, cx - bx);
+    // Signed turn, normalised to [-π, π]
+    let turn = ((bcAng - abAng + 3 * Math.PI) % (2 * Math.PI)) - Math.PI;
+    const turnDeg = Math.abs(turn) * (180 / Math.PI);
+    if (turnDeg < MAX_TURN_DEG) result.push(deduped[i]);
+  }
+  result.push(deduped[deduped.length - 1]);
+  return result;
+}
+
 /** Sample a lat/lon point and compass bearing at `fraction` ∈ [0,1] along a polyline. */
 export function samplePolylineAt(
   points: [number, number][],

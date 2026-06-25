@@ -12,7 +12,7 @@ import {
   TileLayer,
 } from "react-leaflet";
 import { routeColorHex, routeColorVar, routeTextColor } from "../lib/routeColors";
-import { bearingAtStation, canonicalRouteId, routeOffsetSlot, shapePointsForVehicle } from "../lib/routeGeometry";
+import { bearingAtStation, canonicalRouteId, preprocessShape, routeOffsetSlot, shapePointsForVehicle } from "../lib/routeGeometry";
 import type { RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot } from "../types";
 import { RouteBullet } from "./RouteBullet";
 
@@ -154,7 +154,7 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
       const cid = canonicalRouteId(shape.route_id);
       const existing = byRoute.get(cid);
       if (!existing || shape.points.length > existing.points.length) {
-        byRoute.set(cid, { canonical_id: cid, shape_id: shape.shape_id, points: shape.points });
+        byRoute.set(cid, { canonical_id: cid, shape_id: shape.shape_id, points: preprocessShape(shape.points) });
       }
     }
     return [...byRoute.values()];
