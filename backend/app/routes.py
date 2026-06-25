@@ -141,12 +141,16 @@ def route_stops(route_id: str) -> tuple:
         if prev is None or len(pts) > prev[0]:
             best[did] = (len(pts), headsign, pts)
 
-    # Current vehicles by stop
+    # Current vehicles grouped by (direction_id, stop_id)
     vehicles = VehicleSnapshot.query.filter_by(route_id=rid).all()
-    vehicles_by_stop: dict[str, list] = {}
+    vehicles_by_dir_stop: dict[tuple[int, str], list] = {}
     for v in vehicles:
-        if v.stop_id:
-            vehicles_by_stop.setdefault(v.stop_id, []).append(v.to_dict())
+        if v.stop_id and v.direction is not None:
+            # GTFS direction_id: 0 = first listed, 1 = opposite.
+            # Real-time feed uses "N"/"S" strings; map to int.
+            v_did = 0 if v.direction in ("N", "W") else 1
+            key = (v_did, v.stop_id)
+            vehicles_by_dir_stop.setdefault(key, []).append(v.to_dict())
 
     directions = []
     for did in sorted(best):
@@ -174,7 +178,7 @@ def route_stops(route_id: str) -> tuple:
                 "name": st.name,
                 "lat": st.lat,
                 "lon": st.lon,
-                "vehicles": vehicles_by_stop.get(sid, []),
+                "vehicles": vehicles_by_dir_stop.get((did, sid), []),
             })
 
         directions.append({
