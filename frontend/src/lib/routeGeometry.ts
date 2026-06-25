@@ -158,6 +158,21 @@ export function preprocessShape(points: [number, number][]): [number, number][] 
     if (turnDeg < MAX_TURN_DEG) result.push(deduped[i]);
   }
   result.push(deduped[deduped.length - 1]);
+
+  // Pass 3 – detect terminal/junction loops.
+  // If the polyline comes within LOOP_THRESH degrees of a point it visited
+  // at least MIN_GAP steps earlier, it has looped back on itself. Truncate
+  // at the earlier visit so the rendered line ends cleanly there.
+  const LOOP_THRESH = 0.0009; // ≈ 100 m
+  const MIN_GAP = 25;         // ignore very short "near duplicates" already handled
+  for (let i = MIN_GAP; i < result.length; i++) {
+    for (let j = 0; j < i - MIN_GAP; j++) {
+      const dist = Math.hypot(result[i][0] - result[j][0], result[i][1] - result[j][1]);
+      if (dist < LOOP_THRESH) {
+        return result.slice(0, j + 1);
+      }
+    }
+  }
   return result;
 }
 
