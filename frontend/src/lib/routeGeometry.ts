@@ -117,63 +117,82 @@ export function shapePointsForVehicle(
   ).points;
 }
 
+/** Ramer-Douglas-Peucker simplification in geographic (lat/lon) coordinates. */
+function rdpSimplify(pts: [number, number][], eps: number): [number, number][] {
+  if (pts.length <= 2) return pts;
+  const [x1, y1] = pts[0], [x2, y2] = pts[pts.length - 1];
+  const lineLen = Math.hypot(x2 - x1, y2 - y1);
+  let maxDist = 0, maxIdx = 0;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const [x, y] = pts[i];
+    const dist = lineLen === 0
+      ? Math.hypot(x - x1, y - y1)
+      : Math.abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / lineLen;
+    if (dist > maxDist) { maxDist = dist; maxIdx = i; }
+  }
+  if (maxDist > eps) {
+    const left  = rdpSimplify(pts.slice(0, maxIdx + 1), eps);
+    const right = rdpSimplify(pts.slice(maxIdx), eps);
+    return [...left.slice(0, -1), ...right];
+  }
+  return [pts[0], pts[pts.length - 1]];
+}
+
 /**
- * Clean a GTFS shape polyline before passing it to leaflet-polylineoffset.
- * The plugin uses miter joins: at near-180° direction reversals the miter
- * vertex is projected essentially to infinity, producing huge visible loops.
+ * Clean a GTFS shape before passing to leaflet-polylineoffset.
  *
- * Two passes:
- *  1. Remove consecutive duplicate / near-duplicate points (< 4 m apart).
- *     Clusters of nearly-identical points at terminals cause degenerate segments.
- *  2. Remove any interior vertex whose turn angle exceeds 155°. At that angle
- *     the miter ratio is ~1/sin(12.5°) ≈ 4.6, meaning a 10 px offset becomes a
- *     46 px spike that renders as a visible loop.
+ * Root causes of the visible loops:
+ *  A) The offset plugin uses miter joins. Dense point clusters produce
+ *     near-zero-length segments whose miters become NaN/infinite → spikes.
+ *  B) When offset px > curve radius px, the offset line self-intersects → loop.
+ *     At zoom 14 with 10.5 px offset (~50 m) this happens on tight curves.
+ *
+ * Fixes applied in order:
+ *  1. RDP simplification (ε ≈ 8 m) — removes redundant dense clusters while
+ *     preserving the overall route geometry.
+ *  2. Drop near-U-turn vertices (> 150°) — eliminates remaining miter spikes
+ *     from near-180° direction reversals.
+ *  3. Truncate backtracking tails — if the polyline's straight-line distance
+ *     from the start begins falling well below the maximum reached, the GTFS
+ *     shape has looped back (terminal wye/loop track). Keep only the prefix
+ *     up to the furthest point.
  */
 export function preprocessShape(points: [number, number][]): [number, number][] {
   if (points.length < 2) return points;
 
-  // Pass 1 – de-duplicate
-  const MIN_SEP = 0.000036; // ≈ 4 m in degrees
-  const deduped: [number, number][] = [points[0]];
-  for (let i = 1; i < points.length; i++) {
-    const prev = deduped[deduped.length - 1];
-    if (Math.hypot(points[i][0] - prev[0], points[i][1] - prev[1]) > MIN_SEP) {
-      deduped.push(points[i]);
-    }
-  }
+  // Pass 1 – RDP simplification (ε ≈ 8 m in degrees at NYC latitude)
+  const simplified = rdpSimplify(points, 0.00007);
+  if (simplified.length < 2) return simplified;
 
-  // Pass 2 – remove near-U-turn vertices
-  if (deduped.length < 3) return deduped;
-  const MAX_TURN_DEG = 155;
-  const result: [number, number][] = [deduped[0]];
-  for (let i = 1; i < deduped.length - 1; i++) {
-    const ax = deduped[i - 1][1], ay = deduped[i - 1][0];
-    const bx = deduped[i][1],     by = deduped[i][0];
-    const cx = deduped[i + 1][1], cy = deduped[i + 1][0];
-    const abAng = Math.atan2(by - ay, bx - ax);
-    const bcAng = Math.atan2(cy - by, cx - bx);
-    // Signed turn, normalised to [-π, π]
-    let turn = ((bcAng - abAng + 3 * Math.PI) % (2 * Math.PI)) - Math.PI;
-    const turnDeg = Math.abs(turn) * (180 / Math.PI);
-    if (turnDeg < MAX_TURN_DEG) result.push(deduped[i]);
+  // Pass 2 – drop near-U-turn vertices (> 150° turn)
+  const noUturn: [number, number][] = [simplified[0]];
+  for (let i = 1; i < simplified.length - 1; i++) {
+    const ax = simplified[i - 1][1], ay = simplified[i - 1][0];
+    const bx = simplified[i][1],     by = simplified[i][0];
+    const cx = simplified[i + 1][1], cy = simplified[i + 1][0];
+    const abA = Math.atan2(by - ay, bx - ax);
+    const bcA = Math.atan2(cy - by, cx - bx);
+    const turn = Math.abs(((bcA - abA + 3 * Math.PI) % (2 * Math.PI)) - Math.PI) * (180 / Math.PI);
+    if (turn < 150) noUturn.push(simplified[i]);
   }
-  result.push(deduped[deduped.length - 1]);
+  noUturn.push(simplified[simplified.length - 1]);
 
-  // Pass 3 – detect terminal/junction loops.
-  // If the polyline comes within LOOP_THRESH degrees of a point it visited
-  // at least MIN_GAP steps earlier, it has looped back on itself. Truncate
-  // at the earlier visit so the rendered line ends cleanly there.
-  const LOOP_THRESH = 0.0009; // ≈ 100 m
-  const MIN_GAP = 25;         // ignore very short "near duplicates" already handled
-  for (let i = MIN_GAP; i < result.length; i++) {
-    for (let j = 0; j < i - MIN_GAP; j++) {
-      const dist = Math.hypot(result[i][0] - result[j][0], result[i][1] - result[j][1]);
-      if (dist < LOOP_THRESH) {
-        return result.slice(0, j + 1);
-      }
-    }
+  // Pass 3 – truncate backtracking tails (terminal loops).
+  // Find the point furthest from the start. If the endpoint is substantially
+  // closer to the start than that maximum (ratio < 0.55), the shape loops
+  // back; keep only up to the furthest point.
+  const [s0, s1] = noUturn[0];
+  let maxDist = 0, maxIdx = 0;
+  for (let i = 0; i < noUturn.length; i++) {
+    const d = Math.hypot(noUturn[i][0] - s0, noUturn[i][1] - s1);
+    if (d > maxDist) { maxDist = d; maxIdx = i; }
   }
-  return result;
+  const endDist = Math.hypot(noUturn[noUturn.length - 1][0] - s0,
+                              noUturn[noUturn.length - 1][1] - s1);
+  if (maxIdx < noUturn.length - 5 && maxDist > 0 && endDist / maxDist < 0.55) {
+    return noUturn.slice(0, maxIdx + 1);
+  }
+  return noUturn;
 }
 
 /** Sample a lat/lon point and compass bearing at `fraction` ∈ [0,1] along a polyline. */
