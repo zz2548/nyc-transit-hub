@@ -61,6 +61,67 @@ export function offsetPolyline(
   });
 }
 
+/**
+ * Find the geographic bearing (0° = north, clockwise) at the point on a
+ * polyline closest to (stationLat, stationLon). Averages a small window of
+ * segments around the closest point for a smoother heading estimate.
+ */
+export function bearingAtStation(
+  stationLat: number,
+  stationLon: number,
+  points: [number, number][],
+): number {
+  if (points.length < 2) return 0;
+
+  let bestI = 0;
+  let bestDist = Infinity;
+  for (let i = 0; i < points.length - 1; i++) {
+    const midLat = (points[i][0] + points[i + 1][0]) / 2;
+    const midLon = (points[i][1] + points[i + 1][1]) / 2;
+    const d = Math.hypot(
+      (stationLat - midLat) * LAT_M,
+      (stationLon - midLon) * LON_M,
+    );
+    if (d < bestDist) { bestDist = d; bestI = i; }
+  }
+
+  // Average tangent over a small window for smoothness
+  const start = Math.max(0, bestI - 1);
+  const end = Math.min(points.length - 1, bestI + 2);
+  const dlat = (points[end][0] - points[start][0]) * LAT_M;
+  const dlon = (points[end][1] - points[start][1]) * LON_M;
+  return ((Math.atan2(dlon, dlat) * 180) / Math.PI + 360) % 360;
+}
+
+/**
+ * Pick the shape polyline for a route+direction pair.
+ * MTA shape_ids encode direction as the character after '..':
+ *   N/S for most lines; W/E for east-west lines (L, 7, etc.).
+ * The real-time feed maps "N" → geographic N or toward-Manhattan-W,
+ * and "S" → geographic S or away-from-Manhattan-E.
+ */
+export function shapePointsForVehicle(
+  routeId: string,
+  direction: "N" | "S",
+  shapes: { route_id: string; shape_id: string; points: [number, number][] }[],
+): [number, number][] | null {
+  const candidates = shapes.filter((s) => s.route_id === routeId);
+  if (!candidates.length) return null;
+
+  const wantedChars = direction === "N" ? ["N", "W"] : ["S", "E"];
+  const matched = candidates.filter((s) => {
+    const m = s.shape_id.match(/\.\.([NSEW])/);
+    return m && wantedChars.includes(m[1]);
+  });
+
+  // Prefer matched shapes; fall back to all shapes for this route.
+  // Among candidates pick the longest (most complete coverage).
+  const pool = matched.length ? matched : candidates;
+  return pool.reduce((best, s) =>
+    s.points.length > best.points.length ? s : best,
+  ).points;
+}
+
 /** Sample a lat/lon point and compass bearing at `fraction` ∈ [0,1] along a polyline. */
 export function samplePolylineAt(
   points: [number, number][],
