@@ -12,12 +12,12 @@ import {
   TileLayer,
 } from "react-leaflet";
 import { routeColorHex, routeColorVar, routeTextColor } from "../lib/routeColors";
-import { bearingAtStation, routeOffsetSlot, shapePointsForVehicle } from "../lib/routeGeometry";
+import { bearingAtStation, canonicalRouteId, routeOffsetSlot, shapePointsForVehicle } from "../lib/routeGeometry";
 import type { RouteSegment, RouteShape, ServiceAlert, Station, VehicleSnapshot } from "../types";
 import { RouteBullet } from "./RouteBullet";
 
 const NYC_CENTER: [number, number] = [40.7128, -73.94];
-const LINE_WEIGHT = 4;
+const LINE_WEIGHT = 3;
 
 const OffsetPolyline = Polyline as React.ComponentType<
   React.ComponentProps<typeof Polyline> & { offset?: number }
@@ -143,18 +143,20 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
     return map;
   }, [alerts]);
 
-  // One polyline per route: pick longest shape for each route_id
+  // One polyline per canonical route: merge API variants (6X→6, 7X→7, FX→F,
+  // GS/FS/H→S) and pick the longest shape across all variants.
   const dedupedShapes = useMemo(() => {
     const source = shapes.length > 0 ? shapes : segments.map((s) => ({
       route_id: s.route_id,
       shape_id: `${s.route_id}-${s.a.stop_id}-${s.b.stop_id}`,
       points: [[s.a.lat, s.a.lon], [s.b.lat, s.b.lon]] as [number, number][],
     }));
-    const byRoute = new Map<string, typeof source[number]>();
+    const byRoute = new Map<string, { canonical_id: string; shape_id: string; points: [number, number][] }>();
     for (const shape of source) {
-      const existing = byRoute.get(shape.route_id);
+      const cid = canonicalRouteId(shape.route_id);
+      const existing = byRoute.get(cid);
       if (!existing || shape.points.length > existing.points.length) {
-        byRoute.set(shape.route_id, shape);
+        byRoute.set(cid, { canonical_id: cid, shape_id: shape.shape_id, points: shape.points });
       }
     }
     return [...byRoute.values()];
@@ -207,15 +209,15 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
               <OffsetPolyline
                 key={shape.shape_id}
                 positions={shape.points}
-                offset={routeOffsetSlot(shape.route_id) * LINE_WEIGHT}
+                offset={routeOffsetSlot(shape.canonical_id) * LINE_WEIGHT}
                 pathOptions={{
-                  color: routeColorHex(shape.route_id),
+                  color: routeColorHex(shape.canonical_id),
                   weight: LINE_WEIGHT,
                   opacity: 0.9,
                   lineCap: "round",
                   lineJoin: "round",
                 }}
-                eventHandlers={{ click: () => onRouteClick(shape.route_id) }}
+                eventHandlers={{ click: () => onRouteClick(shape.canonical_id) }}
               />
             ))}
           </LayerGroup>
@@ -247,7 +249,7 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
                         <ul>
                           {here.map((v) => (
                             <li key={v.trip_id}>
-                              <RouteBullet routeId={v.route_id} size={16} />{" "}
+                              <RouteBullet routeId={canonicalRouteId(v.route_id)} size={16} />{" "}
                               {v.location_status?.replace(/_/g, " ").toLowerCase()}
                               {v.direction ? ` · ${v.direction === "N" ? "northbound" : "southbound"}` : ""}
                             </li>
@@ -279,7 +281,7 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
                     key={vehicle.trip_id}
                     position={[station.lat + dy, station.lon + dx]}
                     icon={vehicleIcon(
-                      vehicle.route_id,
+                      canonicalRouteId(vehicle.route_id),
                       vehicleBearings.get(vehicle.trip_id) ?? null,
                       vehicle.has_delay_alert,
                     )}
@@ -287,7 +289,7 @@ export function TransitMap({ stations, vehicles, alerts, segments, shapes, onRou
                     <Popup>
                       <div className="station-popup">
                         <strong>
-                          {vehicle.route_id} train{" "}
+                          {canonicalRouteId(vehicle.route_id)} train{" "}
                           {vehicle.direction === "N" ? "northbound" : "southbound"}
                         </strong>
                         <p>To {vehicle.headsign ?? "unknown terminal"}</p>
